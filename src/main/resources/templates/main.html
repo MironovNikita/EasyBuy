@@ -32,17 +32,17 @@
                     <p>
                         <label for="pageSize">Число товаров: </label>
                         <select id="pageSize" name="pageSize" onchange="this.form.submit()">
-                            <option value="5" th:selected="${paging.pageSize()==5}">5</option>
-                            <option value="10" th:selected="${paging.pageSize()==10}">10</option>
-                            <option value="20" th:selected="${paging.pageSize()==20}">20</option>
-                            <option value="50" th:selected="${paging.pageSize()==50}">50</option>
-                            <option value="100" th:selected="${paging.pageSize()==100}">100</option>
+                            <option value="5" th:selected="${paging.pageSize==5}">5</option>
+                            <option value="10" th:selected="${paging.pageSize==10}">10</option>
+                            <option value="20" th:selected="${paging.pageSize==20}">20</option>
+                            <option value="50" th:selected="${paging.pageSize==50}">50</option>
+                            <option value="100" th:selected="${paging.pageSize==100}">100</option>
                         </select>
                     </p>
                     <p>
-                        <button th:if="${paging.hasPrevious()}" name="pageNumber" th:value="${paging.pageNumber()-1}">&lt;</button>
-                        <span th:text="${'Страница: '+paging.pageNumber()}"></span>
-                        <button th:if="${paging.hasNext()}" name="pageNumber" th:value="${paging.pageNumber()+1}">&gt;</button>
+                        <button th:if="${paging.hasPrevious}" name="pageNumber" th:value="${paging.pageNumber - 1}">&lt;</button>
+                        <span th:text="${'Страница: '+paging.pageNumber}"></span>
+                        <button th:if="${paging.hasNext}" name="pageNumber" th:value="${paging.pageNumber+1}">&gt;</button>
                     </p>
                 </form>
             </td>
@@ -53,7 +53,7 @@
                     <tr>
                         <td>
                             <a th:href="${'/items/'+item.getId()}">
-                                <img width="300" height="300" th:src="${'http://localhost:8080/'+item.getImgPath()}">
+                                <img width="300" height="300" th:src="@{'/images/' + ${item.getImagePath()}}" alt="Изображение товара отсутствует">
                             </a>
                         </td>
                     </tr>
@@ -66,7 +66,8 @@
                         </td>
                     </tr>
                     <tr>
-                        <td th:text="${item.getDescription()}"></td>
+                        <td th:text="${item.getDescription()}" style="max-width: 300px; white-space: normal;
+                        overflow-wrap: break-word; word-break: break-word;"></td>
                     </tr>
                     <tr>
                         <td>

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <changeSet id="fill_data" author="MironovNikita">
+        <preConditions onFail="HALT">
+            <tableExists tableName="items"/>
+        </preConditions>
+
+        <insert tableName="items">
+            <column name="title" value="Майка чёрная М"/>
+            <column name="description" value="Майка х/б. Повседневная. Мужская/женская. Абсолютно для всех!"/>
+            <column name="image_path" value="item1.jpg"/>
+            <column name="price" value="5000"/>
+        </insert>
+
+        <insert tableName="items">
+            <column name="title" value="Стандартная лампочка... Или нет?"/>
+            <column name="description" value="Просто лампочка, светит всем!"/>
+            <column name="image_path" value="item2.jpg"/>
+            <column name="price" value="700"/>
+        </insert>
+
+        <rollback>
+            <dropTable tableName="items"/>
+        </rollback>
+    </changeSet>
+</databaseChangeLog>

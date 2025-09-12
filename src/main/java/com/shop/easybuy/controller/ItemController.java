@@ -2,16 +2,12 @@ package com.shop.easybuy.controller;
 
 import com.shop.easybuy.common.ActionEnum;
 import com.shop.easybuy.common.SortEnum;
-import com.shop.easybuy.entity.item.Item;
-import com.shop.easybuy.entity.item.ItemPageResult;
-import com.shop.easybuy.mapper.ItemMapper;
+import com.shop.easybuy.common.PageResult;
+import com.shop.easybuy.repository.ItemRepository;
 import com.shop.easybuy.service.cart.CartServiceImpl;
 import com.shop.easybuy.service.item.ItemServiceImpl;
-import com.shop.easybuy.utils.Utils;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -44,7 +40,7 @@ public class ItemController {
             @RequestParam(value = "pageNumber", required = false, defaultValue = "0") int pageNumber,
             Model model) {
 
-        ItemPageResult result = itemService.getAllByParams(search, PageRequest.of(pageNumber, pageSize, sort.getSort()));
+        var result = itemService.getAllByParams(search, PageRequest.of(pageNumber, pageSize, sort.getSort()));
 
         model.addAttribute("items", result.foundItems());
         model.addAttribute("search", search);
@@ -55,12 +51,25 @@ public class ItemController {
     }
 
     @PostMapping("/main/items/{id}")
-    public String changeQuantity(@PathVariable("id") Long id, ActionEnum action) {
-
-        //TODO Добавить таблицу корзина в БД со ссылкой на товар и численным значением количества (от 0 до бесконечности)
-        // Соответственно, когда будем делать добавление, то делать JOIN из таблицы Cart для получения количества товара
+    public String changeQuantityMainPage(@PathVariable("id") Long id, ActionEnum action) {
 
         cartService.changeQuantity(id, action);
         return "redirect:/main/items";
+    }
+
+    @GetMapping("/items/{id}")
+    public String itemPage(@PathVariable("id") Long id, Model model) {
+
+        var foundItem = itemService.findItemById(id);
+        model.addAttribute("item", foundItem);
+
+        return "item";
+    }
+
+    @PostMapping("/items/{id}")
+    public String changeQuantityItemPage(@PathVariable("id") Long id, ActionEnum action) {
+
+        cartService.changeQuantity(id, action);
+        return "redirect:/items/" + id;
     }
 }

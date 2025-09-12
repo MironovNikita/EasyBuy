@@ -1,15 +1,12 @@
 package com.shop.easybuy.service.item;
 
-import com.shop.easybuy.common.ActionEnum;
-import com.shop.easybuy.entity.item.Item;
-import com.shop.easybuy.entity.item.ItemPageResult;
+import com.shop.easybuy.common.PageResult;
 import com.shop.easybuy.entity.item.ItemResponseDto;
-import com.shop.easybuy.mapper.ItemMapper;
 import com.shop.easybuy.repository.ItemRepository;
 import com.shop.easybuy.utils.Utils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,16 +22,16 @@ public class ItemServiceImpl implements ItemService {
     //TODO Поменять на интерфейс + @Override
     private final ItemRepository itemRepository;
 
-    private final ItemMapper itemMapper;
-
     //@Override
-    public ItemPageResult getAllByParams(String search, PageRequest pageRequest) {
-        Page<Item> page = itemRepository.findAllByTitleOrDescription(search, pageRequest);
-        List<List<ItemResponseDto>> foundItems = Utils.splitList(page.getContent()
-                .stream()
-                .map(itemMapper::convertItemForRs)
-                .toList(), rowSize);
+    public PageResult<ItemResponseDto> getAllByParams(String search, Pageable pageable) {
+        Page<ItemResponseDto> page = itemRepository.findAllByTitleOrDescription(search, pageable);
 
-        return new ItemPageResult(page, foundItems);
+        List<List<ItemResponseDto>> itemsToShow = Utils.splitList(page.getContent(), rowSize);
+
+        return new PageResult<>(page, itemsToShow);
+    }
+
+    public ItemResponseDto findItemById(Long id) {
+        return itemRepository.findItemById(id).orElseThrow(); //TODO Добавить исключение!
     }
 }

@@ -1,23 +1,64 @@
 package com.shop.easybuy.repository;
 
 import com.shop.easybuy.entity.item.Item;
+import com.shop.easybuy.entity.item.ItemResponseDto;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ItemRepository extends JpaRepository<Item, Long> {
 
-    @Query("SELECT i FROM Item i WHERE i.title ILIKE %:search% or i.description LIKE %:search%")
-    List<Item> findAllByTitleOrDescription(@Param("search") String search);
+    @Query("""
+            SELECT new com.shop.easybuy.entity.item.ItemResponseDto(
+                i.id,
+                i.title,
+                i.description,
+                i.imagePath,
+                COALESCE(c.quantity, 0),
+                i.price
+            )
+            FROM Item i
+            LEFT JOIN CartItem c ON i.id = c.itemId
+            WHERE i.title ILIKE %:search% or i.description LIKE %:search%
+            """)
+    Page<ItemResponseDto> findAllByTitleOrDescription(@Param("search") String search, Pageable pageable);
 
-    @Query("SELECT i FROM Item i WHERE i.title ILIKE %:search% or i.description LIKE %:search%")
-    Page<Item> findAllByTitleOrDescription(@Param("search") String search, PageRequest pageRequest);
+    @Query("""
+            SELECT new com.shop.easybuy.entity.item.ItemResponseDto(
+                i.id,
+                i.title,
+                i.description,
+                i.imagePath,
+                COALESCE(c.quantity, 0),
+                i.price
+            )
+            FROM Item i
+            LEFT JOIN CartItem c ON i.id = c.itemId
+            WHERE i.id = c.itemId
+            ORDER BY c.addedAt ASC
+            """)
+    List<ItemResponseDto> findAllInCart();
 
-    //boolean hasNextPage(String search, int limit, int offset);
+    @Query("""
+            SELECT new com.shop.easybuy.entity.item.ItemResponseDto(
+            i.id,
+            i.title,
+            i.description,
+            i.imagePath,
+            COALESCE(c.quantity, 0),
+            i.price
+            )
+            FROM Item i
+            LEFT JOIN CartItem c ON i.id = c.itemId
+            WHERE i.id = :id
+            """
+    )
+    Optional<ItemResponseDto> findItemById(Long id);
 }

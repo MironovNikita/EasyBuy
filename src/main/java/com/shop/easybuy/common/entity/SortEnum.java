@@ -1,4 +1,4 @@
-package com.shop.easybuy.common;
+package com.shop.easybuy.common.entity;
 
 import lombok.Getter;
 import org.springframework.data.domain.Sort;

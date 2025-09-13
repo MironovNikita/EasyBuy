@@ -1,9 +1,11 @@
 package com.shop.easybuy.controller.item;
 
-import com.shop.easybuy.common.ActionEnum;
-import com.shop.easybuy.common.SortEnum;
+import com.shop.easybuy.common.entity.ActionEnum;
+import com.shop.easybuy.common.entity.SortEnum;
 import com.shop.easybuy.service.cart.CartService;
 import com.shop.easybuy.service.item.ItemService;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -11,6 +13,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Validated
 @Controller
@@ -18,10 +21,8 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class ItemController {
 
-    //TODO Поменять на интерфейс
     private final ItemService itemService;
 
-    //TODO Поменять на интерфейс
     private final CartService cartService;
 
     @GetMapping("/")
@@ -48,16 +49,31 @@ public class ItemController {
         return "main";
     }
 
-    //TODO Проверять ID на позитивность, что строго больше 0 - не только тут,но и везде
     @PostMapping("/main/items/{id}")
-    public String changeQuantityMainPage(@PathVariable("id") Long id, ActionEnum action) {
+    public String changeQuantityMainPage(@PathVariable("id")
+                                         @Positive(message = "ID товара должно быть положительным числом.") Long id,
+                                         @RequestParam @NotNull(message = "Изменение количества товара не может быть пустым.") ActionEnum action,
+                                         @RequestParam(value = "search", required = false, defaultValue = "")
+                                         @Size(max = 20, message = "Количество символов в строке поиска не должно превышать 20.") String search,
+                                         @RequestParam(value = "sort", required = false, defaultValue = "NO") SortEnum sort,
+                                         @RequestParam(value = "pageSize", required = false, defaultValue = "10") int pageSize,
+                                         @RequestParam(value = "pageNumber", required = false, defaultValue = "0") int pageNumber,
+                                         RedirectAttributes redirectAttributes) {
 
         cartService.changeQuantity(id, action);
+
+        redirectAttributes.addAttribute("search", search);
+        redirectAttributes.addAttribute("sort", sort.name());
+        redirectAttributes.addAttribute("pageSize", pageSize);
+        redirectAttributes.addAttribute("pageNumber", pageNumber);
+
         return "redirect:/main/items";
     }
 
     @GetMapping("/items/{id}")
-    public String itemPage(@PathVariable("id") Long id, Model model) {
+    public String itemPage(@PathVariable("id")
+                           @Positive(message = "ID товара должно быть положительным числом.") Long id,
+                           Model model) {
 
         var foundItem = itemService.findItemById(id);
         model.addAttribute("item", foundItem);
@@ -66,7 +82,9 @@ public class ItemController {
     }
 
     @PostMapping("/items/{id}")
-    public String changeQuantityItemPage(@PathVariable("id") Long id, ActionEnum action) {
+    public String changeQuantityItemPage(@PathVariable("id")
+                                         @Positive(message = "ID товара должно быть положительным числом.") Long id,
+                                         @RequestParam @NotNull(message = "Изменение количества товара не может быть пустым.") ActionEnum action) {
 
         cartService.changeQuantity(id, action);
         return "redirect:/items/" + id;

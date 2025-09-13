@@ -2,6 +2,7 @@ package com.shop.easybuy.controller.order;
 
 import com.shop.easybuy.entity.order.Order;
 import com.shop.easybuy.service.order.OrderService;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -41,7 +42,10 @@ public class OrderController {
     }
 
     @GetMapping("/orders/{id}")
-    public String showOrder(@PathVariable("id") Long id, Model model) {
+    public String showOrder(@PathVariable("id")
+                            @Positive(message = "ID товара должно быть положительным числом.") Long id,
+                            Model model) {
+
         Order order = orderService.findById(id);
         model.addAttribute("order", order);
         return "order";

@@ -1,16 +1,15 @@
 package com.shop.easybuy.controller.cart;
 
-import com.shop.easybuy.common.ActionEnum;
+import com.shop.easybuy.common.entity.ActionEnum;
 import com.shop.easybuy.entity.cart.CartViewDto;
 import com.shop.easybuy.service.cart.CartService;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
 @Validated
 @Controller
@@ -32,7 +31,9 @@ public class CartController {
     }
 
     @PostMapping("/cart/items/{id}")
-    public String changeQuantity(@PathVariable("id") Long id, ActionEnum action) {
+    public String changeQuantity(@PathVariable("id")
+                                 @Positive(message = "ID товара должно быть положительным числом.") Long id,
+                                 @RequestParam @NotNull(message = "Изменение количества товара не может быть пустым.") ActionEnum action) {
 
         cartService.changeQuantity(id, action);
         return "redirect:/cart/items";

@@ -1,5 +1,6 @@
 package com.shop.easybuy.service.order;
 
+import com.shop.easybuy.common.exception.ObjectNotFoundException;
 import com.shop.easybuy.entity.order.Order;
 import com.shop.easybuy.entity.order.OrderItem;
 import com.shop.easybuy.mapper.ItemMapper;
@@ -7,12 +8,14 @@ import com.shop.easybuy.repository.OrderRepository;
 import com.shop.easybuy.service.cart.CartService;
 import com.shop.easybuy.utils.Utils;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -47,16 +50,26 @@ public class OrderServiceImpl implements OrderService {
 
         Order savedOrder = orderRepository.save(order);
         cartService.clearCart();
+
+        log.info("Сформирован заказ с ID {} и количеством товаров {}.", savedOrder.getId(), savedOrder.getItems().size());
+
         return savedOrder;
     }
 
     @Override
     public Order findById(Long id) {
-        return orderRepository.findOrderByOrderId(id).orElseThrow(); //TODO Дополнить исключением
+        var foundOrder = orderRepository.findOrderByOrderId(id).orElseThrow(() -> {
+            log.error("");
+            return new ObjectNotFoundException("Заказ", id);
+        });
+        log.info("Найден заказ с ID {} и количеством товаров {}.", foundOrder.getId(), foundOrder.getItems().size());
+        return foundOrder;
     }
 
     @Override
     public List<Order> findAll() {
-        return orderRepository.findAllOrders();
+        var foundOrders = orderRepository.findAllOrders();
+        log.info("Найдено {} заказов.", foundOrders.size());
+        return foundOrders;
     }
 }

@@ -38,3 +38,7 @@ out/
 
 ### Databse ###
 application-secret.properties
+
+### Docker ###
+.env
+.env.local

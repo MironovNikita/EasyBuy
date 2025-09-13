@@ -1,0 +1,21 @@
+services:
+  easy-buy-db:
+    image: postgres:17
+    container_name: eb_database_container
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+
+  easy-buy-app:
+    build: .
+    ports:
+      - "8080:8080"
+    depends_on:
+      - easy-buy-db
+    container_name: eb_app_container
+    restart: on-failure
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://easy-buy-db:5432/${POSTGRES_DB}

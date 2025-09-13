@@ -6,31 +6,39 @@
                             http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
 
     <changeSet id="orders_items" author="MironovNikita">
-        <preConditions onFail="WARN">
+        <preConditions onFail="HALT">
             <not>
-                <tableExists tableName="orders_items"/>
+                <tableExists tableName="order_items"/>
             </not>
+            <tableExists tableName="orders"/>
+            <tableExists tableName="items"/>
         </preConditions>
 
-        <createTable tableName="orders_items">
+        <createTable tableName="order_items">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
             <column name="order_id" type="bigint">
                 <constraints nullable="false"/>
             </column>
             <column name="item_id" type="bigint">
                 <constraints nullable="false"/>
             </column>
+            <column name="count" type="int">
+                <constraints nullable="false"/>
+            </column>
         </createTable>
         <rollback>
-            <dropTable tableName="orders_items"/>
+            <dropTable tableName="order_items"/>
         </rollback>
 
-        <addForeignKeyConstraint baseTableName="orders_items"
+        <addForeignKeyConstraint baseTableName="order_items"
                                  baseColumnNames="order_id"
                                  constraintName="fk_orders"
                                  referencedTableName="orders"
                                  referencedColumnNames="id" />
 
-        <addForeignKeyConstraint baseTableName="orders_items"
+        <addForeignKeyConstraint baseTableName="order_items"
                                  baseColumnNames="item_id"
                                  constraintName="fk_items"
                                  referencedTableName="items"

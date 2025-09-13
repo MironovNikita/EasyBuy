@@ -1,6 +1,6 @@
 package com.shop.easybuy.entity.cart;
 
-import com.shop.easybuy.entity.item.ItemResponseDto;
+import com.shop.easybuy.entity.item.ItemRsDto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -10,7 +10,7 @@ import java.util.List;
 @AllArgsConstructor
 public class CartViewDto {
 
-    private List<List<ItemResponseDto>> foundItems;
+    private List<List<ItemRsDto>> foundItems;
 
     private Long totalCount;
 }

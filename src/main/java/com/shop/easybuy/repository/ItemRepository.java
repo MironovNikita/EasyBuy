@@ -1,7 +1,7 @@
 package com.shop.easybuy.repository;
 
 import com.shop.easybuy.entity.item.Item;
-import com.shop.easybuy.entity.item.ItemResponseDto;
+import com.shop.easybuy.entity.item.ItemRsDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -16,7 +16,7 @@ import java.util.Optional;
 public interface ItemRepository extends JpaRepository<Item, Long> {
 
     @Query("""
-            SELECT new com.shop.easybuy.entity.item.ItemResponseDto(
+            SELECT new com.shop.easybuy.entity.item.ItemRsDto(
                 i.id,
                 i.title,
                 i.description,
@@ -28,10 +28,10 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
             LEFT JOIN CartItem c ON i.id = c.itemId
             WHERE i.title ILIKE %:search% or i.description LIKE %:search%
             """)
-    Page<ItemResponseDto> findAllByTitleOrDescription(@Param("search") String search, Pageable pageable);
+    Page<ItemRsDto> findAllByTitleOrDescription(@Param("search") String search, Pageable pageable);
 
     @Query("""
-            SELECT new com.shop.easybuy.entity.item.ItemResponseDto(
+            SELECT new com.shop.easybuy.entity.item.ItemRsDto(
                 i.id,
                 i.title,
                 i.description,
@@ -44,10 +44,10 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
             WHERE i.id = c.itemId
             ORDER BY c.addedAt ASC
             """)
-    List<ItemResponseDto> findAllInCart();
+    List<ItemRsDto> findAllInCart();
 
     @Query("""
-            SELECT new com.shop.easybuy.entity.item.ItemResponseDto(
+            SELECT new com.shop.easybuy.entity.item.ItemRsDto(
             i.id,
             i.title,
             i.description,
@@ -60,5 +60,5 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
             WHERE i.id = :id
             """
     )
-    Optional<ItemResponseDto> findItemById(Long id);
+    Optional<ItemRsDto> findItemById(Long id);
 }

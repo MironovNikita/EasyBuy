@@ -1,9 +1,8 @@
-package com.shop.easybuy.controller;
+package com.shop.easybuy.controller.cart;
 
 import com.shop.easybuy.common.ActionEnum;
 import com.shop.easybuy.entity.cart.CartViewDto;
-import com.shop.easybuy.entity.item.ItemResponseDto;
-import com.shop.easybuy.service.cart.CartServiceImpl;
+import com.shop.easybuy.service.cart.CartService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -13,17 +12,13 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-import java.util.List;
-import java.util.Set;
-
 @Validated
 @Controller
 @RequestMapping
 @RequiredArgsConstructor
 public class CartController {
 
-    //TODO Заменить на интерфейс
-    private final CartServiceImpl cartService;
+    private final CartService cartService;
 
     @GetMapping("/cart/items")
     public String itemCartList(Model model) {
@@ -31,7 +26,7 @@ public class CartController {
         CartViewDto cartView = cartService.getAllItems();
 
         model.addAttribute("items", cartView.getFoundItems());
-        model.addAttribute("empty", cartView.getFoundItems().isEmpty());
+        model.addAttribute("emptyList", cartView.getFoundItems().isEmpty());
         model.addAttribute("total", cartView.getTotalCount());
         return "cart";
     }

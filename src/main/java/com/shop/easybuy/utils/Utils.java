@@ -20,4 +20,10 @@ public class Utils {
         }
         return result;
     }
+
+    public <T> List<T> mergeList(List<List<T>> listToMerge) {
+        return listToMerge.stream()
+                .flatMap(List::stream)
+                .toList();
+    }
 }

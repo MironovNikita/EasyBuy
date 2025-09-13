@@ -8,7 +8,7 @@
     <include file="create-table-items.xml" relativeToChangelogFile="true"/>
     <include file="create-table-cart.xml" relativeToChangelogFile="true"/>
     <include file="create-table-orders.xml" relativeToChangelogFile="true"/>
-    <include file="create-table-orders-items.xml" relativeToChangelogFile="true"/>
+    <include file="create-table-order-items.xml" relativeToChangelogFile="true"/>
 
     <include file="fill-in-items.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>

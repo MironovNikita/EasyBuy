@@ -3,18 +3,19 @@ package com.shop.easybuy.service.cart;
 import com.shop.easybuy.common.ActionEnum;
 import com.shop.easybuy.entity.cart.CartItem;
 import com.shop.easybuy.entity.cart.CartViewDto;
-import com.shop.easybuy.entity.item.ItemResponseDto;
+import com.shop.easybuy.entity.item.ItemRsDto;
 import com.shop.easybuy.repository.CartRepository;
 import com.shop.easybuy.repository.ItemRepository;
 import com.shop.easybuy.utils.Utils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-//TODO Дополнить интерфейс + @Override
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class CartServiceImpl implements CartService {
 
     private static final int rowSize = 5;
@@ -23,7 +24,8 @@ public class CartServiceImpl implements CartService {
 
     private final ItemRepository itemRepository;
 
-    //@Override
+    @Override
+    @Transactional
     public void changeQuantity(Long itemId, ActionEnum action) {
         switch (action) {
             case PLUS -> {
@@ -31,21 +33,20 @@ public class CartServiceImpl implements CartService {
                 cartItem.setQuantity(cartItem.getQuantity() + 1);
                 cartRepository.save(cartItem);
             }
-            case MINUS -> {
-                cartRepository.findById(itemId).ifPresent(cartItem -> {
-                    var quantity = cartItem.getQuantity();
-                    if (quantity > 0 && quantity != 1) {
-                        cartItem.setQuantity(quantity - 1);
-                        cartRepository.save(cartItem);
-                    } else {
-                        cartRepository.deleteById(itemId);
-                    }
-                });
-            }
+            case MINUS -> cartRepository.findById(itemId).ifPresent(cartItem -> {
+                var quantity = cartItem.getQuantity();
+                if (quantity > 0 && quantity != 1) {
+                    cartItem.setQuantity(quantity - 1);
+                    cartRepository.save(cartItem);
+                } else {
+                    cartRepository.deleteById(itemId);
+                }
+            });
             case DELETE -> cartRepository.deleteById(itemId);
         }
     }
 
+    @Override
     public CartViewDto getAllItems() {
 
         var itemsInCart = itemRepository.findAllInCart();
@@ -55,7 +56,13 @@ public class CartServiceImpl implements CartService {
         return new CartViewDto(foundItems, total);
     }
 
-    private Long countTotal(List<ItemResponseDto> itemsInCart) {
+    @Override
+    @Transactional
+    public void clearCart() {
+        cartRepository.clearCart();
+    }
+
+    private Long countTotal(List<ItemRsDto> itemsInCart) {
         return itemsInCart
                 .stream()
                 .mapToLong(item -> item.getCount() * item.getPrice())

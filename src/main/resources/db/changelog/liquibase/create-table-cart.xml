@@ -6,10 +6,11 @@
                             http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
 
     <changeSet id="cart" author="MironovNikita">
-        <preConditions onFail="WARN">
+        <preConditions onFail="HALT">
             <not>
                 <tableExists tableName="cart"/>
             </not>
+            <tableExists tableName="items"/>
         </preConditions>
 
         <createTable tableName="cart">

@@ -1,6 +1,5 @@
 package com.shop.easybuy.entity.item;
 
-import jakarta.persistence.Transient;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -10,7 +9,7 @@ import lombok.experimental.Accessors;
 @Accessors(chain = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class ItemResponseDto {
+public class ItemRsDto {
 
     private Long id;
 

@@ -1,11 +1,9 @@
-package com.shop.easybuy.controller;
+package com.shop.easybuy.controller.item;
 
 import com.shop.easybuy.common.ActionEnum;
 import com.shop.easybuy.common.SortEnum;
-import com.shop.easybuy.common.PageResult;
-import com.shop.easybuy.repository.ItemRepository;
-import com.shop.easybuy.service.cart.CartServiceImpl;
-import com.shop.easybuy.service.item.ItemServiceImpl;
+import com.shop.easybuy.service.cart.CartService;
+import com.shop.easybuy.service.item.ItemService;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -21,10 +19,10 @@ import org.springframework.web.bind.annotation.*;
 public class ItemController {
 
     //TODO Поменять на интерфейс
-    private final ItemServiceImpl itemService;
+    private final ItemService itemService;
 
     //TODO Поменять на интерфейс
-    private final CartServiceImpl cartService;
+    private final CartService cartService;
 
     @GetMapping("/")
     public String mainRedirect() {
@@ -50,6 +48,7 @@ public class ItemController {
         return "main";
     }
 
+    //TODO Проверять ID на позитивность, что строго больше 0 - не только тут,но и везде
     @PostMapping("/main/items/{id}")
     public String changeQuantityMainPage(@PathVariable("id") Long id, ActionEnum action) {
 

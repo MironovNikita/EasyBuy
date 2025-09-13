@@ -100,7 +100,7 @@
     </tr>
     <tr>
         <td style="text-align:center">
-            <form action="/buy" method="post" th:if="${!empty}">
+            <form th:action="@{/buy}" method="post" th:if="${!emptyList}">
                 <button>Купить</button>
             </form>
         </td>

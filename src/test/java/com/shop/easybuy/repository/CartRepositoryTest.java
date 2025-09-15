@@ -23,7 +23,7 @@ public class CartRepositoryTest extends AbstractTestDatabase {
     private ItemRepository itemRepository;
 
     @Test
-    @DisplayName("INT: Проверка очистки корзины")
+    @DisplayName("Проверка очистки корзины")
     void shouldClearCart() {
         Item item1 = createItem();
         Item item2 = createItem();

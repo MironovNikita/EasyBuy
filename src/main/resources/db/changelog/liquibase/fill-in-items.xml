@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <changeSet id="fill_data" author="MironovNikita">
+        <preConditions onFail="HALT">
+            <tableExists tableName="items"/>
+        </preConditions>
+
+        <insert tableName="items">
+            <column name="title" value="Майка чёрная М"/>
+            <column name="description" value="Майка х/б. Повседневная. Мужская/женская. Абсолютно для всех!"/>
+            <column name="image_path" value="item1.jpg"/>
+            <column name="price" value="5000"/>
+        </insert>
+
+        <insert tableName="items">
+            <column name="title" value="Стандартная лампочка... Или нет?"/>
+            <column name="description" value="Просто лампочка, светит всем!"/>
+            <column name="image_path" value="item2.jpg"/>
+            <column name="price" value="700"/>
+        </insert>
+
+        <insert tableName="items">
+            <column name="title" value="Колбаса"/>
+            <column name="description" value="Колбаса из мяса. Честно."/>
+            <column name="image_path" value="item3.jpg"/>
+            <column name="price" value="1201"/>
+        </insert>
+
+        <insert tableName="items">
+            <column name="title" value="Моющее средство для посуды"/>
+            <column name="description" value="Легко и быстро отмоет чистую посуду!"/>
+            <column name="image_path" value="item4.jpg"/>
+            <column name="price" value="359"/>
+        </insert>
+
+        <insert tableName="items">
+            <column name="title" value="Йогурт вишнёвый. 2 стаканчика."/>
+            <column name="description" value="Просто вишнёвый йогурт без вишни."/>
+            <column name="image_path" value="item5.jpg"/>
+            <column name="price" value="121"/>
+        </insert>
+
+        <insert tableName="items">
+            <column name="title" value="Мармеладки и шоколадки."/>
+            <column name="description" value="Конфеты на любой вкус. 1 кг."/>
+            <column name="image_path" value="item6.jpg"/>
+            <column name="price" value="431"/>
+        </insert>
+
+        <rollback>
+            <dropTable tableName="items"/>
+        </rollback>
+    </changeSet>
+</databaseChangeLog>

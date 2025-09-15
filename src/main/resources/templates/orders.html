@@ -2,33 +2,35 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 
 <head>
+    <meta charset="UTF-8">
     <title>Заказы</title>
+    <th:block th:replace="~{header :: commonHead}"></th:block>
 </head>
 
 <body>
-<a href="/cart/items" style="float:right;">
+<a th:href="@{/cart/items}" style="float:right;">
     <b>КОРЗИНА &cudarrr;</b>
 </a>
-<a href="/main/items" style="float:right;">
+<a th:href="@{/main/items}" style="float:right;">
     <b>ГЛАВНАЯ &cudarrr;</b>
 </a>
 <table style="width:70%;margin-left:auto;margin-right:auto;">
     <tr th:each="order : ${orders}">
         <td>
             <h2>
-                <a th:text="${'Заказ №'+order.id()}" th:href="${'/orders/'+order.id()}"></a>
+                <a th:text="${'Заказ №' + order.getId()}" th:href="@{/orders/{id}(id=${order.id})}"></a>
             </h2>
+            <h4><span th:text="${'Дата оформления заказа: ' + #temporals.format(order.createdAt, 'dd.MM.yyyy HH:mm:ss')}"/></h4>
             <table>
-                <tr th:each="item : ${order.items()}">
-                    <td th:text="${item.getTitle()+' ('+item.getCount()+' шт.) '+(item.getPrice()*item.getCount())+' руб.'}"></td>
+                <tr th:each="orderItem : ${order.items}">
+                    <td th:text="${orderItem.item.title+' (' + orderItem.count + ' шт.) ' + (orderItem.item.price * orderItem.count) + ' руб.'}"></td>
                 </tr>
             </table>
             <p>
-                <b th:text="${'Сумма: '+order.totalSum()}+' руб.'"></b>
+                <b th:text="${'Сумма: ' + order.total} + ' руб.'"></b>
             </p>
         </td>
     </tr>
 </table>
 </body>
-
 </html>

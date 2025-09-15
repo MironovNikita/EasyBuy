@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <changeSet id="cart" author="MironovNikita">
+        <preConditions onFail="HALT">
+            <not>
+                <tableExists tableName="cart"/>
+            </not>
+            <tableExists tableName="items"/>
+        </preConditions>
+
+        <createTable tableName="cart">
+            <column name="item_id" type="bigint">
+                <constraints nullable="false" />
+            </column>
+            <column name="quantity" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="added_at" type="timestamp" defaultValueDate="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint
+                baseTableName="cart"
+                baseColumnNames="item_id"
+                constraintName="fk_item"
+                referencedTableName="items"
+                referencedColumnNames="id"
+                onDelete="CASCADE"/>
+
+        <rollback>
+            <dropTable tableName="cart"/>
+        </rollback>
+    </changeSet>
+</databaseChangeLog>

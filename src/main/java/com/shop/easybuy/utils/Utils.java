@@ -9,8 +9,8 @@ import java.util.List;
 public class Utils {
 
     public <T> List<List<T>> splitList(List<T> listToSplit, int rowSize) {
-        if (rowSize <= 0) {
-            throw new IllegalArgumentException("Передан некорректный параметр длины строки массива: %s".formatted(rowSize));
+        if (rowSize <= 0 || listToSplit == null) {
+            throw new IllegalArgumentException("Передан некорректный параметр длины строки массива: %s или некорректный список.".formatted(rowSize));
         }
 
         List<List<T>> result = new ArrayList<>();
@@ -22,6 +22,9 @@ public class Utils {
     }
 
     public <T> List<T> mergeList(List<List<T>> listToMerge) {
+        if (listToMerge == null) {
+            throw new IllegalArgumentException("Передан некорректный список.");
+        }
         return listToMerge.stream()
                 .flatMap(List::stream)
                 .toList();

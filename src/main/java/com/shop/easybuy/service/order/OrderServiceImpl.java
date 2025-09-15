@@ -1,5 +1,6 @@
 package com.shop.easybuy.service.order;
 
+import com.shop.easybuy.common.exception.CartEmptyException;
 import com.shop.easybuy.common.exception.ObjectNotFoundException;
 import com.shop.easybuy.entity.order.Order;
 import com.shop.easybuy.entity.order.OrderItem;
@@ -32,6 +33,12 @@ public class OrderServiceImpl implements OrderService {
     public Order buyItemsInCart() {
 
         var foundInCart = cartService.getAllItems();
+
+        if (foundInCart.getFoundItems().isEmpty()) {
+            log.error("Невозможно оформить заказ. Корзина пуста.");
+            throw new CartEmptyException();
+        }
+
         var items = Utils.mergeList(foundInCart.getFoundItems());
         Order order = new Order();
 

@@ -117,6 +117,32 @@ public class GlobalExceptionHandler {
         return ERROR_VIEW;
     }
 
+    @ExceptionHandler(CartEmptyException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public String handleCartEmptyException(CartEmptyException e, Model model, HttpServletRequest request) {
+        ApiError apiError = new ApiError(
+                e.getMessage(),
+                HttpStatus.BAD_REQUEST.value(),
+                getDateTime()
+        );
+        model.addAttribute(ERROR_ATTRIBUTE, apiError);
+        addRefererToModel(request, model);
+        return ERROR_VIEW;
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public String handleIllegalArgumentException(IllegalArgumentException e, Model model, HttpServletRequest request) {
+        ApiError apiError = new ApiError(
+                e.getMessage(),
+                HttpStatus.BAD_REQUEST.value(),
+                getDateTime()
+        );
+        model.addAttribute(ERROR_ATTRIBUTE, apiError);
+        addRefererToModel(request, model);
+        return ERROR_VIEW;
+    }
+
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public String handleException(Exception e, Model model, HttpServletRequest request) {

@@ -29,7 +29,7 @@ public class OrderController {
         Order order = orderService.buyItemsInCart();
         model.addAttribute("id", order.getId());
         model.addFlashAttribute("newOrder", true);
-        model.addAttribute("order", order);
+        model.addFlashAttribute("order", order);
 
         return "redirect:/orders/{id}";
     }

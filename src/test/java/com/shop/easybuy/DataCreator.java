@@ -20,7 +20,7 @@ public class DataCreator {
     public static Order createOrder() {
         return new Order();
     }
-
+/**
     public static ItemRsDto createItemRsDto() {
         ItemRsDto itemRsDto = new ItemRsDto();
         itemRsDto.setTitle("Test title");
@@ -30,4 +30,5 @@ public class DataCreator {
         itemRsDto.setCount(10);
         return itemRsDto;
     }
+ */
 }

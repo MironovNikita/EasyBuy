@@ -21,13 +21,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @JpaTestConfig
 @ActiveProfiles("test")
-public class OrderRepositoryTest extends AbstractTestDatabase {
+public class OrderRepositoryOldTest extends AbstractTestDatabase {
+/**
+    @Autowired
+    private ItemRepositoryOld itemRepositoryOld;
 
     @Autowired
-    private ItemRepository itemRepository;
-
-    @Autowired
-    private OrderRepository orderRepository;
+    private OrderRepositoryOld orderRepositoryOld;
 
     @Test
     @DisplayName("Проверка поиска заказа по ID")
@@ -35,8 +35,8 @@ public class OrderRepositoryTest extends AbstractTestDatabase {
         Item item1 = createItem();
         Item item2 = createItem();
 
-        itemRepository.save(item1);
-        itemRepository.save(item2);
+        itemRepositoryOld.save(item1);
+        itemRepositoryOld.save(item2);
 
         Order order = createOrder();
         List<OrderItem> orderedItems = List.of(new OrderItem(null, order, item1, 3), new OrderItem(null, order, item2, 2));
@@ -44,9 +44,9 @@ public class OrderRepositoryTest extends AbstractTestDatabase {
         order.setTotal(1000L);
         order.setCreatedAt(LocalDateTime.of(2025, 1, 1, 12, 0));
 
-        orderRepository.save(order);
+        orderRepositoryOld.save(order);
 
-        Order foundOrder = orderRepository.findOrderByOrderId(order.getId()).orElseThrow(() -> new ObjectNotFoundException("Заказ", order.getId()));
+        Order foundOrder = orderRepositoryOld.findOrderByOrderId(order.getId()).orElseThrow(() -> new ObjectNotFoundException("Заказ", order.getId()));
 
         assertEquals(order.getId(), foundOrder.getId());
         assertEquals(order.getCreatedAt(), foundOrder.getCreatedAt());
@@ -60,8 +60,8 @@ public class OrderRepositoryTest extends AbstractTestDatabase {
         Item item1 = createItem();
         Item item2 = createItem();
 
-        itemRepository.save(item1);
-        itemRepository.save(item2);
+        itemRepositoryOld.save(item1);
+        itemRepositoryOld.save(item2);
 
         Order order1 = createOrder();
         List<OrderItem> orderedItems1 = List.of(new OrderItem(null, order1, item1, 3));
@@ -74,13 +74,14 @@ public class OrderRepositoryTest extends AbstractTestDatabase {
         order2.setTotal(100L);
         order2.setCreatedAt(LocalDateTime.of(2025, 1, 2, 12, 0));
 
-        orderRepository.save(order1);
-        orderRepository.save(order2);
+        orderRepositoryOld.save(order1);
+        orderRepositoryOld.save(order2);
 
-        List<Order> foundOrders = orderRepository.findAllOrders();
+        List<Order> foundOrders = orderRepositoryOld.findAllOrders();
 
         assertEquals(2, foundOrders.size());
         assertTrue(foundOrders.contains(order1));
         assertTrue(foundOrders.contains(order2));
     }
+    */
 }

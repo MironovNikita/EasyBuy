@@ -13,7 +13,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import reactor.core.publisher.Mono;
 
 @Validated
 @Controller
@@ -26,12 +26,12 @@ public class ItemController {
     private final CartService cartService;
 
     @GetMapping("/")
-    public String mainRedirect() {
-        return "redirect:/main/items";
+    public Mono<String> mainRedirect() {
+        return Mono.just("redirect:/main/items");
     }
 
     @GetMapping("/main/items")
-    public String mainPage(
+    public Mono<String> mainPage(
             @RequestParam(value = "search", required = false, defaultValue = "")
             @Size(max = 20, message = "Количество символов в строке поиска не должно превышать 20.") String search,
             @RequestParam(value = "sort", required = false, defaultValue = "NO") SortEnum sort,
@@ -39,14 +39,16 @@ public class ItemController {
             @RequestParam(value = "pageNumber", required = false, defaultValue = "0") int pageNumber,
             Model model) {
 
-        var result = itemService.getAllByParams(search, PageRequest.of(pageNumber, pageSize, sort.getSort()));
+        PageRequest pageRequest = PageRequest.of(pageNumber, pageSize, sort.getSort());
+        return itemService.getAllByParams(search, pageRequest)
+                .map(result -> {
+                    model.addAttribute("items", result.foundItems());
+                    model.addAttribute("search", search);
+                    model.addAttribute("paging", result.page());
+                    model.addAttribute("sort", sort.name());
 
-        model.addAttribute("items", result.foundItems());
-        model.addAttribute("search", search);
-        model.addAttribute("paging", result.page());
-        model.addAttribute("sort", sort.name());
-
-        return "main";
+                    return "main";
+                });
     }
 
     @PostMapping("/main/items/{id}")
@@ -71,14 +73,16 @@ public class ItemController {
     }
 
     @GetMapping("/items/{id}")
-    public String itemPage(@PathVariable("id")
-                           @Positive(message = "ID товара должно быть положительным числом.") Long id,
-                           Model model) {
+    public Mono<String> itemPage(@PathVariable("id")
+                                 @Positive(message = "ID товара должно быть положительным числом.") Long id,
+                                 Model model) {
 
-        var foundItem = itemService.findItemById(id);
-        model.addAttribute("item", foundItem);
+        return itemService.findItemById(id)
+                .map(result -> {
+                    model.addAttribute("item", result);
 
-        return "item";
+                    return "item";
+                });
     }
 
     @PostMapping("/items/{id}")

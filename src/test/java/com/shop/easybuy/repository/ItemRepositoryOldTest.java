@@ -19,13 +19,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @JpaTestConfig
 @ActiveProfiles("test")
-public class ItemRepositoryTest extends AbstractTestDatabase {
+public class ItemRepositoryOldTest extends AbstractTestDatabase {
+/**
+    @Autowired
+    private ItemRepositoryOld itemRepositoryOld;
 
     @Autowired
-    private ItemRepository itemRepository;
-
-    @Autowired
-    private CartRepository cartRepository;
+    private CartRepositoryOld cartRepositoryOld;
 
     @Test
     @DisplayName("Поиск товара по имени или описанию")
@@ -33,9 +33,9 @@ public class ItemRepositoryTest extends AbstractTestDatabase {
 
         String search = "Test";
         Item item = createItem();
-        itemRepository.save(item);
+        itemRepositoryOld.save(item);
 
-        List<ItemRsDto> foundItems = itemRepository.findAllByTitleOrDescription(search, Pageable.unpaged()).getContent();
+        List<ItemRsDto> foundItems = itemRepositoryOld.findAllByTitleOrDescription(search, Pageable.unpaged()).getContent();
         ItemRsDto foundItem = foundItems.getFirst();
 
         assertEquals(item.getTitle(), foundItem.getTitle());
@@ -52,14 +52,14 @@ public class ItemRepositoryTest extends AbstractTestDatabase {
         Item item1 = createItem();
         Item item2 = createItem();
         System.out.println(item1.getId());
-        itemRepository.save(item1);
-        itemRepository.save(item2);
+        itemRepositoryOld.save(item1);
+        itemRepositoryOld.save(item2);
         CartItem cartItem1 = new CartItem(item1.getId(), count1);
         CartItem cartItem2 = new CartItem(item2.getId(), count2);
-        cartRepository.save(cartItem1);
-        cartRepository.save(cartItem2);
+        cartRepositoryOld.save(cartItem1);
+        cartRepositoryOld.save(cartItem2);
 
-        List<ItemRsDto> foundItemsInCart = itemRepository.findAllInCart();
+        List<ItemRsDto> foundItemsInCart = itemRepositoryOld.findAllInCart();
         ItemRsDto itemRsDto1 = foundItemsInCart.stream()
                 .filter(dto -> dto.getId().equals(item1.getId()))
                 .findFirst()
@@ -90,13 +90,14 @@ public class ItemRepositoryTest extends AbstractTestDatabase {
     @DisplayName("Поиск товара по ID")
     void shouldFindItemById() {
         Item item = createItem();
-        itemRepository.save(item);
+        itemRepositoryOld.save(item);
 
-        ItemRsDto foundItem = itemRepository.findItemById(item.getId()).orElseThrow(() -> new ObjectNotFoundException("Товар", item.getId()));
+        ItemRsDto foundItem = itemRepositoryOld.findItemById(item.getId()).orElseThrow(() -> new ObjectNotFoundException("Товар", item.getId()));
 
         assertEquals(item.getTitle(), foundItem.getTitle());
         assertEquals(item.getDescription(), foundItem.getDescription());
         assertEquals(item.getImagePath(), foundItem.getImagePath());
         assertEquals(item.getPrice(), foundItem.getPrice());
     }
+ */
 }

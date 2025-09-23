@@ -1,27 +1,25 @@
 package com.shop.easybuy.entity.cart;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
 
 import java.time.LocalDateTime;
 
 @Data
-@Entity
 @Table(name = "cart")
 @NoArgsConstructor
 public class CartItem {
 
     @Id
-    @Column(name = "item_id")
+    @Column("item_id")
     private Long itemId;
 
     private Integer quantity;
 
-    @Column(name = "added_at", nullable = false, updatable = false)
+    @Column("added_at")
     private LocalDateTime addedAt = LocalDateTime.now();
 
     public CartItem(Long itemId, Integer quantity) {

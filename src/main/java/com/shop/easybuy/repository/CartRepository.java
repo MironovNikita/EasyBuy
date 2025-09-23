@@ -1,15 +1,12 @@
 package com.shop.easybuy.repository;
 
 import com.shop.easybuy.entity.cart.CartItem;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.stereotype.Repository;
+import org.springframework.data.r2dbc.repository.Query;
+import org.springframework.data.r2dbc.repository.R2dbcRepository;
+import reactor.core.publisher.Mono;
 
-@Repository
-public interface CartRepository extends JpaRepository<CartItem, Long> {
+public interface CartRepository extends R2dbcRepository<CartItem, Long> {
 
-    @Modifying
-    @Query("DELETE FROM CartItem")
-    void clearCart();
+    @Query("DELETE FROM cart")
+    Mono<Integer> clearCart();
 }

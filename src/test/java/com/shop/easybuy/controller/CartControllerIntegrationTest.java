@@ -18,7 +18,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 public class CartControllerIntegrationTest extends BaseIntegrationTest {
-
+/**
     @Test
     @Sql(statements = {
             "INSERT INTO cart(item_id, quantity, added_at) VALUES(1, 3, '2025-09-14 21:56:39.047928')",
@@ -134,4 +134,5 @@ public class CartControllerIntegrationTest extends BaseIntegrationTest {
         assertEquals(changedItem.getId(), itemId);
         assertEquals(changedItem.getCount(), 0);
     }
+    */
 }

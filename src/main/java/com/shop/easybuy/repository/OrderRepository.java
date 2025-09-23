@@ -1,29 +1,41 @@
 package com.shop.easybuy.repository;
 
 import com.shop.easybuy.entity.order.Order;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
+import com.shop.easybuy.entity.order.OrderFlatDto;
+import org.springframework.data.r2dbc.repository.Query;
+import org.springframework.data.r2dbc.repository.R2dbcRepository;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
+import reactor.core.publisher.Flux;
 
-import java.util.List;
-import java.util.Optional;
-
-@Repository
-public interface OrderRepository extends JpaRepository<Order, Long> {
+public interface OrderRepository extends R2dbcRepository<Order, Long> {
 
     @Query("""
-            SELECT o FROM Order o
-            JOIN FETCH o.items oi
-            JOIN FETCH oi.item
+                SELECT o.id AS orderId,
+                        o.total AS orderTotal,
+                        o.created_at AS createdAt,
+                        oi.id AS orderItemId,
+                        i.id AS itemId,
+                        i.title AS itemTitle,
+                        i.price AS itemPrice
+                FROM orders o
+                LEFT JOIN order_items oi ON o.id = oi.order_id
+                LEFT JOIN items i ON oi.item_id = i.id
+                ORDER BY o.created_at
+            """)
+    Flux<OrderFlatDto> findAllOrders();
+
+    @Query("""
+            SELECT o.id AS orderId,
+                    o.total AS orderTotal,
+                    o.created_at AS createdAt,
+                    oi.id AS orderItemId,
+                    i.id AS itemId,
+                    i.title AS itemTitle,
+                    i.price AS itemPrice
+            FROM orders o
+            LEFT JOIN order_items oi ON o.id = oi.order_id
+            LEFT JOIN items i ON oi.item_id = i.id
             WHERE o.id = :orderId
             """)
-    Optional<Order> findOrderByOrderId(@Param("orderId") Long orderId);
-
-    @Query("""
-            SELECT o FROM Order o
-            JOIN FETCH o.items oi
-            JOIN FETCH oi.item
-            """)
-    List<Order> findAllOrders();
+    Flux<OrderFlatDto> findByOrderId(@Param("orderId") Long orderId);
 }

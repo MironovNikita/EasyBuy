@@ -1,37 +1,11 @@
 package com.shop.easybuy.service;
 
-import com.shop.easybuy.common.exception.CartEmptyException;
-import com.shop.easybuy.common.exception.ObjectNotFoundException;
-import com.shop.easybuy.entity.cart.CartViewDto;
-import com.shop.easybuy.entity.item.Item;
-import com.shop.easybuy.entity.item.ItemRsDto;
-import com.shop.easybuy.entity.order.Order;
-import com.shop.easybuy.entity.order.OrderItem;
-import com.shop.easybuy.mapper.ItemMapper;
-import com.shop.easybuy.repository.OrderRepositoryOld;
-import com.shop.easybuy.service.cart.CartService;
-import com.shop.easybuy.service.order.OrderServiceImpl;
-import com.shop.easybuy.utils.Utils;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-
-import static com.shop.easybuy.DataCreator.*;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class OrderServiceTest {
-/**
+/*
     @Mock
     private OrderRepositoryOld orderRepositoryOld;
 

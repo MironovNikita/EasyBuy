@@ -1,4 +1,4 @@
-package com.shop.easybuy.common.interceptor;
+package com.shop.easybuy.common.filter;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.lang.NonNull;
@@ -10,9 +10,10 @@ import reactor.core.publisher.Mono;
 
 @Slf4j
 @Component
-public class RequestLoggingInterceptor implements WebFilter {
+public class RequestLoggingFilter implements WebFilter {
 
     @Override
+    @NonNull
     public Mono<Void> filter(@NonNull ServerWebExchange exchange, @NonNull WebFilterChain chain) {
         long startTime = System.currentTimeMillis();
 
@@ -20,8 +21,7 @@ public class RequestLoggingInterceptor implements WebFilter {
                 .doOnTerminate(() -> {
                     long endTime = System.currentTimeMillis();
                     String uri = exchange.getRequest().getURI().toString();
-                    String path = exchange.getRequest().getURI().getPath();
-                    log.info("Запрос {} {} выполнен за {} мс.", path, uri, endTime - startTime);
+                    log.info("Запрос {} выполнен за {} мс.", uri, endTime - startTime);
                 });
     }
 }

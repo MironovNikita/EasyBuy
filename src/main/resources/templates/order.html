@@ -26,7 +26,7 @@
     </tr>
     <tr>
         <td>
-            <h3 th:text="${'Дата оформления заказа: ' + #temporals.format(order.createdAt, 'dd.MM.yyyy HH:mm:ss')}"/>
+            <h3 th:text="${'Дата оформления заказа: ' + #temporals.format(order.getOrderCreatedAt(), 'dd.MM.yyyy HH:mm:ss')}"/>
         </td>
     </tr>
     <tr th:each="orderItem : ${order.items}">
@@ -34,20 +34,20 @@
             <table>
                 <tr>
                     <td>
-                        <a th:href="@{/items/{id}(id=${orderItem.item.id})}">
-                            <img width="300" height="300" th:src="@{'/images/' + ${orderItem.item.imagePath}}" alt="Изображение отсутствует">
+                        <a th:href="@{/items/{id}(id=${orderItem.getItemId()})}">
+                            <img width="300" height="300" th:src="@{'/images/' + ${orderItem.getImagePath()}}" alt="Изображение отсутствует">
                         </a>
                     </td>
                 </tr>
                 <tr>
                     <td>
-                        <b th:text="${orderItem.item.title}"></b>
+                        <b th:text="${orderItem.getTitle()}"></b>
                     </td>
                     <td>
-                        <b th:text="${orderItem.count} + ' шт.'"></b>
+                        <b th:text="${orderItem.getCount()} + ' шт.'"></b>
                     </td>
                     <td>
-                        <b th:text="${orderItem.item.price * orderItem.count}+' руб.'"></b>
+                        <b th:text="${orderItem.getPrice() * orderItem.getCount()}+' руб.'"></b>
                     </td>
                 </tr>
             </table>
@@ -55,7 +55,7 @@
     </tr>
     <tr>
         <td>
-            <h3 th:text="${'Сумма: ' + order.total}+' руб.'"></h3>
+            <h3 th:text="${'Сумма: ' + order.getTotal()}+' руб.'"></h3>
         </td>
     </tr>
 </table>

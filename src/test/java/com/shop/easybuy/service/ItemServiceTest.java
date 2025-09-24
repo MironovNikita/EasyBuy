@@ -1,30 +1,11 @@
 package com.shop.easybuy.service;
 
-import com.shop.easybuy.common.entity.PageResult;
-import com.shop.easybuy.common.exception.ObjectNotFoundException;
-import com.shop.easybuy.entity.item.ItemRsDto;
-import com.shop.easybuy.repository.ItemRepositoryOld;
-import com.shop.easybuy.service.item.ItemServiceImpl;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.*;
-
-import java.util.List;
-import java.util.Optional;
-
-import static com.shop.easybuy.DataCreator.createItemRsDto;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class ItemServiceTest {
-/**
+/*
     @Mock
     private ItemRepositoryOld itemRepositoryOld;
 

@@ -52,45 +52,39 @@ public class ItemController {
     }
 
     @PostMapping("/main/items/{id}")
-    public String changeQuantityMainPage(@PathVariable("id")
-                                         @Positive(message = "ID товара должно быть положительным числом.") Long id,
-                                         @RequestParam @NotNull(message = "Изменение количества товара не может быть пустым.") ActionEnum action,
-                                         @RequestParam(value = "search", required = false, defaultValue = "")
-                                         @Size(max = 20, message = "Количество символов в строке поиска не должно превышать 20.") String search,
-                                         @RequestParam(value = "sort", required = false, defaultValue = "NO") SortEnum sort,
-                                         @RequestParam(value = "pageSize", required = false, defaultValue = "10") int pageSize,
-                                         @RequestParam(value = "pageNumber", required = false, defaultValue = "0") int pageNumber,
-                                         RedirectAttributes redirectAttributes) {
-
-        cartService.changeQuantity(id, action);
-
-        redirectAttributes.addAttribute("search", search);
-        redirectAttributes.addAttribute("sort", sort.name());
-        redirectAttributes.addAttribute("pageSize", pageSize);
-        redirectAttributes.addAttribute("pageNumber", pageNumber);
-
-        return "redirect:/main/items";
+    public Mono<String> changeQuantityMainPage(@PathVariable("id")
+                                               @Positive(message = "ID товара должно быть положительным числом.") Long id,
+                                               @RequestParam @NotNull(message = "Изменение количества товара не может быть пустым.") ActionEnum action,
+                                               @RequestParam(value = "search", required = false, defaultValue = "")
+                                               @Size(max = 20, message = "Количество символов в строке поиска не должно превышать 20.") String search,
+                                               @RequestParam(value = "sort", required = false, defaultValue = "NO") SortEnum sort,
+                                               @RequestParam(value = "pageSize", required = false, defaultValue = "10") int pageSize,
+                                               @RequestParam(value = "pageNumber", required = false, defaultValue = "0") int pageNumber) {
+        //TODO Возможно поменять местами pageNumber и pageSize
+        return cartService.changeQuantity(id, action)
+                .then(Mono.just("redirect:/main/items?search=" + search +
+                        "&sort=" + sort.name() +
+                        "&pageNumber=" + pageNumber +
+                        "&pageSize=" + pageSize));
+        //return "redirect:/main/items";
     }
 
     @GetMapping("/items/{id}")
     public Mono<String> itemPage(@PathVariable("id")
                                  @Positive(message = "ID товара должно быть положительным числом.") Long id,
                                  Model model) {
-
         return itemService.findItemById(id)
                 .map(result -> {
                     model.addAttribute("item", result);
-
                     return "item";
                 });
     }
 
     @PostMapping("/items/{id}")
-    public String changeQuantityItemPage(@PathVariable("id")
-                                         @Positive(message = "ID товара должно быть положительным числом.") Long id,
-                                         @RequestParam @NotNull(message = "Изменение количества товара не может быть пустым.") ActionEnum action) {
-
-        cartService.changeQuantity(id, action);
-        return "redirect:/items/" + id;
+    public Mono<String> changeQuantityItemPage(@PathVariable("id")
+                                               @Positive(message = "ID товара должно быть положительным числом.") Long id,
+                                               @RequestParam @NotNull(message = "Изменение количества товара не может быть пустым.") ActionEnum action) {
+        return cartService.changeQuantity(id, action)
+                .then(Mono.just("redirect:/items/" + id));
     }
 }

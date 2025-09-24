@@ -1,13 +1,12 @@
 package com.shop.easybuy.entity.order;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 @Getter
 @Setter
+@Builder
 @AllArgsConstructor
-//TODO Забыли imagePath и description
+@NoArgsConstructor
 public class OrderItemDto {
 
     private Long id;

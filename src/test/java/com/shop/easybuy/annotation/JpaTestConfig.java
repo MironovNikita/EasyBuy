@@ -1,8 +1,9 @@
 package com.shop.easybuy.annotation;
 
-import com.shop.easybuy.repository.CartRepositoryOld;
-import com.shop.easybuy.repository.ItemRepositoryOld;
-import com.shop.easybuy.repository.OrderRepositoryOld;
+import com.shop.easybuy.repository.CartRepository;
+import com.shop.easybuy.repository.ItemRepository;
+import com.shop.easybuy.repository.OrderItemRepository;
+import com.shop.easybuy.repository.OrderRepository;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
@@ -21,7 +22,7 @@ import java.lang.annotation.Target;
 @DataJpaTest(
         includeFilters = @ComponentScan.Filter(
                 type = FilterType.ASSIGNABLE_TYPE,
-                classes = {CartRepositoryOld.class, ItemRepositoryOld.class, OrderRepositoryOld.class})
+                classes = {CartRepository.class, ItemRepository.class, OrderItemRepository.class, OrderRepository.class})
 )
 @Transactional
 @Rollback

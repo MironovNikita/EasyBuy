@@ -5,7 +5,7 @@ public record ItemRsDto(
         String title,
         String description,
         String imagePath,
-        Integer count,
+        Long count,
         Long price
 ) {
 }

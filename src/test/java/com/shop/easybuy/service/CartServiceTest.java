@@ -1,30 +1,11 @@
 package com.shop.easybuy.service;
 
-import com.shop.easybuy.common.entity.ActionEnum;
-import com.shop.easybuy.common.exception.ObjectNotFoundException;
-import com.shop.easybuy.entity.cart.CartItem;
-import com.shop.easybuy.entity.cart.CartViewDto;
-import com.shop.easybuy.entity.item.ItemRsDto;
-import com.shop.easybuy.repository.CartRepositoryOld;
-import com.shop.easybuy.repository.ItemRepositoryOld;
-import com.shop.easybuy.service.cart.CartServiceImpl;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.List;
-import java.util.Optional;
-
-import static com.shop.easybuy.DataCreator.createItemRsDto;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class CartServiceTest {
-/**
+/*
     @Mock
     private CartRepositoryOld cartRepositoryOld;
 

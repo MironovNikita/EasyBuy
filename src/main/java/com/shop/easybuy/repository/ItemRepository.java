@@ -16,8 +16,7 @@ public interface ItemRepository extends R2dbcRepository<Item, Long> {
                     i.description,
                     i.image_path AS imagePath,
                     COALESCE(c.quantity, 0) AS count,
-                    i.price,
-                    c.added_at as addedAt
+                    i.price
             FROM items i
             LEFT JOIN cart c ON i.id = c.item_id
             WHERE i.title ILIKE :search or i.description LIKE :search
@@ -38,11 +37,10 @@ public interface ItemRepository extends R2dbcRepository<Item, Long> {
                     i.description,
                     i.image_path AS imagePath,
                     COALESCE(c.quantity, 0) AS count,
-                    i.price,
-                    c.added_at AS addedAt
+                    i.price
                 FROM items i
                 LEFT JOIN cart c ON i.id = c.item_id
-                ORDER BY c.added_at
+                ORDER BY i.id
             """)
     Flux<ItemRsDto> findAllInCart();
 

@@ -75,7 +75,7 @@ public class OrderServiceImpl implements OrderService {
                                                                 .ifPresent(original -> {
                                                                     dto.setTitle(original.title());
                                                                     dto.setDescription(original.description());
-                                                                    dto.setImagePath(original.imagePath());
+                                                                    dto.setImagePath(original.image());
                                                                     dto.setPrice(original.price());
                                                                 });
 

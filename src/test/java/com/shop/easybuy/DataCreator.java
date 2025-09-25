@@ -12,7 +12,7 @@ public class DataCreator {
         Item item = new Item();
         item.setTitle("Test title");
         item.setDescription("Test description");
-        item.setImagePath("Test image");
+        item.setImage("Test image");
         item.setPrice(1000L);
         return item;
     }

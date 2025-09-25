@@ -16,8 +16,7 @@ public class Item {
 
     private String description;
 
-    @Column("image_path")
-    private String imagePath;
+    private String image;
 
     private Long price;
 }

@@ -8,13 +8,23 @@ import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
+
 @Slf4j
 @Component
 public class RequestLoggingFilter implements WebFilter {
 
+    private static final List<String> EXCLUDE_PATHS = List.of(
+            "/easy-buy/images/",
+            "/easy-buy/favicon"
+    );
+
     @Override
     @NonNull
     public Mono<Void> filter(@NonNull ServerWebExchange exchange, @NonNull WebFilterChain chain) {
+        String path = exchange.getRequest().getURI().getPath();
+        if (EXCLUDE_PATHS.stream().anyMatch(path::contains)) return chain.filter(exchange);
+
         long startTime = System.currentTimeMillis();
 
         return chain.filter(exchange)

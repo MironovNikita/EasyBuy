@@ -22,7 +22,7 @@
                 <column name="description" type="varchar(3000)">
                     <constraints nullable="false"/>
                 </column>
-                <column name="image_path" type="varchar(1000)">
+                <column name="image" type="varchar(1000)">
                     <constraints nullable="false"/>
                 </column>
                 <column name="price" type="bigint">

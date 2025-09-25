@@ -14,12 +14,12 @@ public interface ItemRepository extends R2dbcRepository<Item, Long> {
             SELECT i.id,
                     i.title,
                     i.description,
-                    i.image_path AS imagePath,
+                    i.image,
                     COALESCE(c.quantity, 0) AS count,
                     i.price
             FROM items i
             LEFT JOIN cart c ON i.id = c.item_id
-            WHERE i.title ILIKE :search or i.description LIKE :search
+            WHERE i.title ILIKE CONCAT('%', :search, '%') or i.description ILIKE CONCAT('%', :search, '%')
             LIMIT :limit OFFSET :offset
             """)
     Flux<ItemRsDto> findAllByTitleOrDescription(@Param("search") String search, Integer limit, Long offset);
@@ -27,7 +27,7 @@ public interface ItemRepository extends R2dbcRepository<Item, Long> {
     @Query("""
             SELECT COUNT(*)
             FROM items i
-            WHERE i.title ILIKE :search or i.description LIKE :search
+            WHERE i.title ILIKE CONCAT('%', :search, '%') or i.description ILIKE CONCAT('%', :search, '%')
             """)
     Mono<Long> countItemsBySearch(@Param("search") String search);
 
@@ -35,7 +35,7 @@ public interface ItemRepository extends R2dbcRepository<Item, Long> {
             SELECT i.id,
                     i.title,
                     i.description,
-                    i.image_path AS imagePath,
+                    i.image,
                     COALESCE(c.quantity, 0) AS count,
                     i.price
                 FROM items i
@@ -48,7 +48,7 @@ public interface ItemRepository extends R2dbcRepository<Item, Long> {
             SELECT i.id,
                     i.title,
                     i.description,
-                    i.image_path AS imagePath,
+                    i.image,
                     COALESCE(c.quantity, 0) AS count,
                     i.price
             FROM items i

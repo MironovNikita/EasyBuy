@@ -33,16 +33,16 @@ public class CartServiceImpl implements CartService {
     @Transactional
     public Mono<Void> changeQuantity(Long itemId, ActionEnum action) {
         return switch (action) {
-            case PLUS -> cartRepository.findById(itemId)
+            case PLUS -> cartRepository.findCartItemByItemId(itemId)
                     .defaultIfEmpty(new CartItem(itemId, 0))
                     .flatMap(found -> {
                         found.setQuantity(found.getQuantity() + 1);
                         logCart(itemId, found.getQuantity());
-                        return cartRepository.save(found);
+                        return cartRepository.addItemToCart(found);
                     })
                     .then();
 
-            case MINUS -> cartRepository.findById(itemId)
+            case MINUS -> cartRepository.findCartItemByItemId(itemId)
                     .switchIfEmpty(Mono.defer(() -> {
                         log.error("Товар с указанным ID {} не был найден.", itemId);
                         return Mono.error(new ObjectNotFoundException("Товар", itemId));
@@ -52,22 +52,23 @@ public class CartServiceImpl implements CartService {
                         if (quantity > 1) {
                             found.setQuantity(quantity - 1);
                             logCart(itemId, found.getQuantity());
-                            return cartRepository.save(found);
+                            return cartRepository.addItemToCart(found);
                         } else {
                             logCart(itemId, 0);
-                            return cartRepository.deleteById(itemId);
+                            return cartRepository.deleteCartItemByItemId(itemId);
                         }
                     })
                     .then();
 
-            case DELETE -> cartRepository.deleteById(itemId)
+            case DELETE -> cartRepository.deleteCartItemByItemId(itemId)
                     .doOnSuccess(aVoid -> logCart(itemId, 0))
                     .then();
         };
     }
 
     private void logCart(Long itemId, Integer quantity) {
-        if (quantity > 0) log.info("В корзине обновлено количество товара с ID {}. Текущее количество: {}.", itemId, quantity);
+        if (quantity > 0)
+            log.info("В корзине обновлено количество товара с ID {}. Текущее количество: {}.", itemId, quantity);
         else log.info("Товар с ID {} был удалён из корзины.", itemId);
     }
 

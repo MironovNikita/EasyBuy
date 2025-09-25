@@ -1,4 +1,4 @@
-package com.shop.easybuy.repository;
+package com.shop.easybuy.repository.order;
 
 import com.shop.easybuy.entity.order.Order;
 import com.shop.easybuy.entity.order.OrderFlatDto;

@@ -1,4 +1,4 @@
-package com.shop.easybuy.repository;
+package com.shop.easybuy.repository.cart;
 
 import com.shop.easybuy.entity.cart.CartItem;
 import org.springframework.data.r2dbc.repository.Query;

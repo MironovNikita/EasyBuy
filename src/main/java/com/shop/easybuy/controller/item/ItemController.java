@@ -54,13 +54,13 @@ public class ItemController {
     @PostMapping("/main/items/{id}")
     public Mono<String> changeQuantityMainPage(@PathVariable("id")
                                                @Positive(message = "ID товара должно быть положительным числом.") Long id,
-                                               @RequestParam @NotNull(message = "Изменение количества товара не может быть пустым.") ActionEnum action,
+                                               @RequestParam(value = "action") @NotNull(message = "Изменение количества товара не может быть пустым.") ActionEnum action,
                                                @RequestParam(value = "search", required = false, defaultValue = "")
                                                @Size(max = 20, message = "Количество символов в строке поиска не должно превышать 20.") String search,
                                                @RequestParam(value = "sort", required = false, defaultValue = "NO") SortEnum sort,
                                                @RequestParam(value = "pageSize", required = false, defaultValue = "10") int pageSize,
                                                @RequestParam(value = "pageNumber", required = false, defaultValue = "0") int pageNumber) {
-        //TODO Возможно поменять местами pageNumber и pageSize
+
         return cartService.changeQuantity(id, action)
                 .then(Mono.just("redirect:/main/items?search=" + search +
                         "&sort=" + sort.name() +

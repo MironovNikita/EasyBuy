@@ -1,4 +1,4 @@
-package com.shop.easybuy.repository;
+package com.shop.easybuy.repository.order;
 
 import com.shop.easybuy.entity.order.OrderItem;
 import org.springframework.data.r2dbc.repository.R2dbcRepository;

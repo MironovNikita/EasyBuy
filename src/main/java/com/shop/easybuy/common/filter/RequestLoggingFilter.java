@@ -30,8 +30,9 @@ public class RequestLoggingFilter implements WebFilter {
         return chain.filter(exchange)
                 .doOnTerminate(() -> {
                     long endTime = System.currentTimeMillis();
+                    String type = exchange.getRequest().getMethod().toString();
                     String uri = exchange.getRequest().getURI().toString();
-                    log.info("Запрос {} выполнен за {} мс.", uri, endTime - startTime);
+                    log.info("{}-запрос {} выполнен за {} мс.", type, uri, endTime - startTime);
                 });
     }
 }

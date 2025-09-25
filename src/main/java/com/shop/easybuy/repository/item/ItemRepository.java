@@ -1,4 +1,4 @@
-package com.shop.easybuy.repository;
+package com.shop.easybuy.repository.item;
 
 import com.shop.easybuy.entity.item.Item;
 import com.shop.easybuy.entity.item.ItemRsDto;
@@ -8,9 +8,9 @@ import org.springframework.data.repository.query.Param;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-public interface ItemRepository extends R2dbcRepository<Item, Long> {
+public interface ItemRepository extends R2dbcRepository<Item, Long>, ItemRepositoryCustom {
 
-    @Query("""
+    /*@Query("""
             SELECT i.id,
                     i.title,
                     i.description,
@@ -22,7 +22,7 @@ public interface ItemRepository extends R2dbcRepository<Item, Long> {
             WHERE i.title ILIKE CONCAT('%', :search, '%') or i.description ILIKE CONCAT('%', :search, '%')
             LIMIT :limit OFFSET :offset
             """)
-    Flux<ItemRsDto> findAllByTitleOrDescription(@Param("search") String search, Integer limit, Long offset);
+    Flux<ItemRsDto> findAllByTitleOrDescription(@Param("search") String search, Integer limit, Long offset);*/
 
     @Query("""
             SELECT COUNT(*)
@@ -40,6 +40,7 @@ public interface ItemRepository extends R2dbcRepository<Item, Long> {
                     i.price
                 FROM items i
                 LEFT JOIN cart c ON i.id = c.item_id
+                WHERE i.id = c.item_id
                 ORDER BY i.id
             """)
     Flux<ItemRsDto> findAllInCart();

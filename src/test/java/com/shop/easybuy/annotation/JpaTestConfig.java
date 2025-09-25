@@ -1,9 +1,9 @@
 package com.shop.easybuy.annotation;
 
-import com.shop.easybuy.repository.CartRepository;
-import com.shop.easybuy.repository.ItemRepository;
-import com.shop.easybuy.repository.OrderItemRepository;
-import com.shop.easybuy.repository.OrderRepository;
+import com.shop.easybuy.repository.cart.CartRepository;
+import com.shop.easybuy.repository.item.ItemRepository;
+import com.shop.easybuy.repository.order.OrderItemRepository;
+import com.shop.easybuy.repository.order.OrderRepository;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;

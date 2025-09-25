@@ -3,7 +3,7 @@ package com.shop.easybuy.service.item;
 import com.shop.easybuy.common.entity.PageResult;
 import com.shop.easybuy.common.exception.ObjectNotFoundException;
 import com.shop.easybuy.entity.item.ItemRsDto;
-import com.shop.easybuy.repository.ItemRepository;
+import com.shop.easybuy.repository.item.ItemRepository;
 import com.shop.easybuy.utils.Utils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +31,7 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public Mono<PageResult<ItemRsDto>> getAllByParams(String search, Pageable pageable) {
 
-        Flux<ItemRsDto> foundItems = itemRepository.findAllByTitleOrDescription(search, pageable.getPageSize(), pageable.getOffset());
+        Flux<ItemRsDto> foundItems = itemRepository.findAllByTitleOrDescription(search, pageable.getPageSize(), pageable.getOffset(), pageable.getSort());
         Mono<Long> total = itemRepository.countItemsBySearch(search);
 
         return foundItems

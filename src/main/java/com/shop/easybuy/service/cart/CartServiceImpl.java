@@ -1,7 +1,6 @@
 package com.shop.easybuy.service.cart;
 
 import com.shop.easybuy.common.entity.ActionEnum;
-import com.shop.easybuy.common.exception.ObjectNotFoundException;
 import com.shop.easybuy.entity.cart.CartItem;
 import com.shop.easybuy.entity.cart.CartViewDto;
 import com.shop.easybuy.entity.item.ItemRsDto;
@@ -44,8 +43,8 @@ public class CartServiceImpl implements CartService {
 
             case MINUS -> cartRepository.findCartItemByItemId(itemId)
                     .switchIfEmpty(Mono.defer(() -> {
-                        log.error("Товар с указанным ID {} не был найден.", itemId);
-                        return Mono.error(new ObjectNotFoundException("Товар", itemId));
+                        log.warn("Товар с указанным ID {} не был найден. Действие {} пропущено.", itemId, action);
+                        return Mono.empty();
                     }))
                     .flatMap(found -> {
                         var quantity = found.getQuantity();

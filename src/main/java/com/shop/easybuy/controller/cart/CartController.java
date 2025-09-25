@@ -2,13 +2,17 @@ package com.shop.easybuy.controller.cart;
 
 import com.shop.easybuy.common.entity.ActionEnum;
 import com.shop.easybuy.service.cart.CartService;
-import jakarta.validation.constraints.NotNull;
+import com.shop.easybuy.utils.ValidationUtils;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 @Validated
@@ -34,9 +38,14 @@ public class CartController {
     @PostMapping("/cart/items/{id}")
     public Mono<String> changeQuantity(@PathVariable("id")
                                        @Positive(message = "ID товара должно быть положительным числом.") Long id,
-                                       @RequestParam @NotNull(message = "Изменение количества товара не может быть пустым.") ActionEnum action) {
+                                       ServerWebExchange exchange) {
 
-        return cartService.changeQuantity(id, action)
-                .then(Mono.just("redirect:/cart/items"));
+        return exchange.getFormData()
+                .flatMap(formData -> {
+                    ActionEnum action = ValidationUtils.validateAction(formData.getFirst("action"));
+                    return cartService.changeQuantity(id, action)
+                            .then(Mono.just("redirect:/cart/items"));
+                });
+
     }
 }

@@ -4,18 +4,17 @@ import com.shop.easybuy.common.entity.ActionEnum;
 import com.shop.easybuy.common.entity.SortEnum;
 import com.shop.easybuy.service.cart.CartService;
 import com.shop.easybuy.service.item.ItemService;
-import jakarta.validation.constraints.NotNull;
+import com.shop.easybuy.utils.ValidationUtils;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.util.MultiValueMap;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ServerWebExchange;
+import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Mono;
 
 @Validated
@@ -43,6 +42,7 @@ public class ItemController {
             Model model) {
 
         PageRequest pageRequest = PageRequest.of(pageNumber, pageSize, sort.getSort());
+
         return itemService.getAllByParams(search, pageRequest)
                 .map(result -> {
                     model.addAttribute("items", result.foundItems());
@@ -54,36 +54,28 @@ public class ItemController {
                 });
     }
 
+
     @PostMapping("/main/items/{id}")
     public Mono<String> changeQuantityMainPage(@PathVariable("id")
                                                @Positive(message = "ID товара должно быть положительным числом.") Long id,
-                                               ServerWebExchange exchange,
-                                               @RequestParam(value = "search", required = false, defaultValue = "")
-                                               @Size(max = 20, message = "Количество символов в строке поиска не должно превышать 20.") String search,
-                                               @RequestParam(value = "sort", required = false, defaultValue = "NO") SortEnum sort,
-                                               @RequestParam(value = "pageSize", required = false, defaultValue = "10") int pageSize,
-                                               @RequestParam(value = "pageNumber", required = false, defaultValue = "0") int pageNumber) {
+                                               ServerWebExchange exchange) {
 
         return exchange.getFormData()
                 .flatMap(formData -> {
-                    String action = formData.getFirst("action");
-                    if (action == null) {
-                        return Mono.error(new IllegalArgumentException("Параметр action отсутствует"));
-                    }
+                    ActionEnum action = ValidationUtils.validateAction(formData.getFirst("action"));
+                    String search = ValidationUtils.validateSearch(formData.getFirst("search"));
+                    String sort = formData.getFirst("sort");
+                    String pageNumber = formData.getFirst("pageNumber");
+                    String pageSize = formData.getFirst("pageSize");
 
-                    ActionEnum actionEnum;
-                    try {
-                        actionEnum = ActionEnum.valueOf(action);
-                    } catch (IllegalArgumentException e) {
-                        return Mono.error(new IllegalArgumentException("Некорректное значение action: " + action));
-                    }
-
-                    // тут дальше работа с actionEnum
-                    return cartService.changeQuantity(id, actionEnum)
-                            .thenReturn("redirect:/main/items?search=" + search +
-                                    "&sort=" + sort.name() +
-                                    "&pageNumber=" + pageNumber +
-                                    "&pageSize=" + pageSize);
+                    return cartService.changeQuantity(id, action)
+                            .thenReturn(UriComponentsBuilder.fromPath("/main/items")
+                                    .queryParam("search", search)
+                                    .queryParam("sort", sort)
+                                    .queryParam("pageNumber", pageNumber)
+                                    .queryParam("pageSize", pageSize)
+                                    .toUriString())
+                            .map(url -> "redirect:" + url);
                 });
     }
 
@@ -101,8 +93,13 @@ public class ItemController {
     @PostMapping("/items/{id}")
     public Mono<String> changeQuantityItemPage(@PathVariable("id")
                                                @Positive(message = "ID товара должно быть положительным числом.") Long id,
-                                               @RequestParam @NotNull(message = "Изменение количества товара не может быть пустым.") ActionEnum action) {
-        return cartService.changeQuantity(id, action)
-                .then(Mono.just("redirect:/items/" + id));
+                                               ServerWebExchange exchange) {
+        return exchange.getFormData()
+                .flatMap(formData -> {
+                    ActionEnum action = ValidationUtils.validateAction(formData.getFirst("action"));
+
+                    return cartService.changeQuantity(id, action)
+                            .then(Mono.just("redirect:/items/" + id));
+                });
     }
 }

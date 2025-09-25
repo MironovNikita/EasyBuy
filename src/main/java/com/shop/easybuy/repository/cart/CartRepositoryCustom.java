@@ -5,5 +5,5 @@ import reactor.core.publisher.Mono;
 
 public interface CartRepositoryCustom {
 
-    Mono<CartItem> addItemToCart(CartItem cartItem);
+    Mono<Long> addItemToCart(CartItem cartItem);
 }

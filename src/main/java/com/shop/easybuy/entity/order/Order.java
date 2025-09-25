@@ -3,7 +3,6 @@ package com.shop.easybuy.entity.order;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
 import java.time.LocalDateTime;
@@ -18,6 +17,5 @@ public class Order {
 
     private Long total;
 
-    @Column("created_at")
-    private LocalDateTime createdAt;
+    private LocalDateTime created;
 }

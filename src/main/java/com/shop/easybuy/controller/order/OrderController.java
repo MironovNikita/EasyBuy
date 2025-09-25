@@ -7,6 +7,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Mono;
 
 @Validated
@@ -21,16 +22,11 @@ public class OrderController {
     public Mono<String> buy() {
 
         return orderService.buyItemsInCart()
-                .map(orderRsDto -> "redirect:/orders/" + orderRsDto.getId() + "?newOrder=true");
-
-
-        /*model.addAttribute("id", order.getId());
-        model.addFlashAttribute("newOrder", true);
-        model.addFlashAttribute("order", order);
-
-        return "redirect:/orders/{id}";*/
+                .map(orderRsDto -> "redirect:" + UriComponentsBuilder.fromPath("/orders/{id}")
+                        .queryParam("newOrder", true)
+                        .buildAndExpand(orderRsDto.getId())
+                        .toUriString());
     }
-
 
     @GetMapping("/orders")
     public Mono<String> showOrders(Model model) {
@@ -51,7 +47,7 @@ public class OrderController {
                 .map(orderRsDto -> {
                     model.addAttribute("order", orderRsDto);
 
-                    if (Boolean.TRUE.equals(newOrder)) model.addAttribute(newOrder);
+                    if (Boolean.TRUE.equals(newOrder)) model.addAttribute("newOrder", newOrder);
 
                     return "order";
                 });

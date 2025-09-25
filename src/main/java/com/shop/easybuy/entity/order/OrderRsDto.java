@@ -15,7 +15,7 @@ public class OrderRsDto {
 
     private Long total;
 
-    private LocalDateTime orderCreatedAt;
+    private LocalDateTime orderCreated;
 
     private List<OrderItemDto> items;
 }

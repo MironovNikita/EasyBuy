@@ -2,6 +2,7 @@ package com.shop.easybuy.service.order;
 
 import com.shop.easybuy.common.exception.CartEmptyException;
 import com.shop.easybuy.common.exception.ObjectNotFoundException;
+import com.shop.easybuy.entity.item.ItemRsDto;
 import com.shop.easybuy.entity.order.*;
 import com.shop.easybuy.repository.order.OrderItemRepository;
 import com.shop.easybuy.repository.order.OrderRepository;
@@ -46,7 +47,7 @@ public class OrderServiceImpl implements OrderService {
 
                     Order order = new Order();
                     order.setTotal(found.getTotalCount());
-                    order.setCreatedAt(LocalDateTime.now());
+                    order.setCreated(LocalDateTime.now());
 
                     return orderRepository.save(order)
                             .flatMap(savedOrder -> {
@@ -64,28 +65,30 @@ public class OrderServiceImpl implements OrderService {
                                         .map(savedItems -> {
                                             List<OrderItemDto> itemDtos = savedItems.stream()
                                                     .map(oi -> {
-                                                        OrderItemDto dto = new OrderItemDto();
-                                                        dto.setId(oi.getId());
-                                                        dto.setItemId(oi.getItemId());
-
-                                                        items.stream()
+                                                        ItemRsDto original = items.stream()
                                                                 .filter(i -> i.id().equals(oi.getItemId()))
                                                                 .findFirst()
-                                                                .ifPresent(original -> {
-                                                                    dto.setTitle(original.title());
-                                                                    dto.setDescription(original.description());
-                                                                    dto.setImagePath(original.image());
-                                                                    dto.setPrice(original.price());
+                                                                .orElseThrow(() -> {
+                                                                    log.error("Item c ID {} не найден при формировании заказа", oi.getItemId());
+                                                                    return new IllegalStateException("Item c ID %d не найден при формировании заказа"
+                                                                            .formatted(oi.getItemId()));
                                                                 });
 
-                                                        dto.setCount(oi.getCount());
-                                                        return dto;
+                                                        return new OrderItemDto(
+                                                                oi.getId(),
+                                                                oi.getItemId(),
+                                                                original.title(),
+                                                                original.description(),
+                                                                original.image(),
+                                                                original.price(),
+                                                                oi.getCount()
+                                                        );
                                                     }).toList();
 
                                             return new OrderRsDto(
                                                     order.getId(),
                                                     order.getTotal(),
-                                                    order.getCreatedAt(),
+                                                    order.getCreated(),
                                                     itemDtos
                                             );
                                         });

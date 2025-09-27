@@ -10,5 +10,5 @@
     <include file="create-table-orders.xml" relativeToChangelogFile="true"/>
     <include file="create-table-order-items.xml" relativeToChangelogFile="true"/>
 
-    <include file="fill-in-items.xml" relativeToChangelogFile="true" context="prod,controller-test"/>
+    <include file="fill-in-items.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>

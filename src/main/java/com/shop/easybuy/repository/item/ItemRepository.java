@@ -10,20 +10,6 @@ import reactor.core.publisher.Mono;
 
 public interface ItemRepository extends R2dbcRepository<Item, Long>, ItemRepositoryCustom {
 
-    /*@Query("""
-            SELECT i.id,
-                    i.title,
-                    i.description,
-                    i.image,
-                    COALESCE(c.quantity, 0) AS count,
-                    i.price
-            FROM items i
-            LEFT JOIN cart c ON i.id = c.item_id
-            WHERE i.title ILIKE CONCAT('%', :search, '%') or i.description ILIKE CONCAT('%', :search, '%')
-            LIMIT :limit OFFSET :offset
-            """)
-    Flux<ItemRsDto> findAllByTitleOrDescription(@Param("search") String search, Integer limit, Long offset);*/
-
     @Query("""
             SELECT COUNT(*)
             FROM items i

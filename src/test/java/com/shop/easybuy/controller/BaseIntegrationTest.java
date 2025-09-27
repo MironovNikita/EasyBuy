@@ -2,7 +2,6 @@ package com.shop.easybuy.controller;
 
 import com.shop.easybuy.service.item.ItemService;
 import com.shop.easybuy.service.order.OrderService;
-import com.shop.easybuy.testDB.AbstractTestDatabase;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -27,7 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
                 }, executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD
         )
 })
-public abstract class BaseIntegrationTest extends AbstractTestDatabase {
+public abstract class BaseIntegrationTest {
 
     @Autowired
     protected MockMvc mockMvc;

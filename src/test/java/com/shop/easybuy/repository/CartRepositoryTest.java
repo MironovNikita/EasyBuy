@@ -6,6 +6,7 @@ import com.shop.easybuy.testDB.AbstractRepositoryTest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -19,25 +20,15 @@ public class CartRepositoryTest extends AbstractRepositoryTest {
     @DisplayName("Проверка добавления товара в корзину")
     void shouldAddItemToCart() {
 
-        StepVerifier.create(cartRepository.count())
-                .expectNext(0L)
-                .verifyComplete();
+        Mono<CartItem> testFlow = cartRepository.count()
+                .doOnNext(count -> assertThat(count).isZero())
+                .then(cartRepository.addItemToCart(new CartItem(1L, 10)))
+                .flatMap(cartRepository::findCartItemByItemId);
 
-        StepVerifier.create(cartRepository.addItemToCart(new CartItem(1L, 10)))
-                .assertNext(savedId -> {
-                    assertThat(savedId).isNotNull();
-
-                    StepVerifier.create(cartRepository.count())
-                            .expectNextCount(1L)
-                            .verifyComplete();
-
-                    StepVerifier.create(cartRepository.findById(savedId))
-                            .assertNext(cartItem -> {
-                                assertThat(cartItem).isNotNull();
-                                assertThat(cartItem.getItemId()).isEqualTo(1L);
-                                assertThat(cartItem.getQuantity()).isEqualTo(10);
-                            })
-                            .verifyComplete();
+        StepVerifier.create(testFlow)
+                .assertNext(cartItem -> {
+                    assertThat(cartItem.getItemId()).isEqualTo(1L);
+                    assertThat(cartItem.getQuantity()).isEqualTo(10);
                 })
                 .verifyComplete();
     }

@@ -1,13 +1,34 @@
 package com.shop.easybuy.service;
 
+import com.shop.easybuy.common.exception.ObjectNotFoundException;
+import com.shop.easybuy.entity.item.ItemRsDto;
+import com.shop.easybuy.repository.item.ItemRepository;
+import com.shop.easybuy.service.item.ItemServiceImpl;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
+
+import java.util.List;
+
+import static com.shop.easybuy.DataCreator.createItemRsDto;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class ItemServiceTest {
-/*
+
     @Mock
-    private ItemRepositoryOld itemRepositoryOld;
+    private ItemRepository itemRepository;
 
     @InjectMocks
     private ItemServiceImpl itemService;
@@ -16,62 +37,69 @@ public class ItemServiceTest {
     @DisplayName("Получение списка товаров без параметров поиска")
     void shouldGetAllItemsWithoutParams() {
         String search = "";
-        ItemRsDto itemRsDto1 = createItemRsDto();
-        itemRsDto1.setId(1L);
-        ItemRsDto itemRsDto2 = createItemRsDto();
-        itemRsDto2.setId(2L);
+        ItemRsDto itemRsDto1 = createItemRsDto(1L);
+        ItemRsDto itemRsDto2 = createItemRsDto(2L);
 
         Pageable pageable = PageRequest.of(1, 5, Sort.unsorted());
         List<ItemRsDto> foundItems = List.of(itemRsDto1, itemRsDto2);
-        Page<ItemRsDto> mockPage = new PageImpl<>(foundItems, pageable, foundItems.size());
 
-        when(itemRepositoryOld.findAllByTitleOrDescription(search, pageable)).thenReturn(mockPage);
+        when(itemRepository.findAllByTitleOrDescription(search, pageable.getPageSize(), pageable.getOffset(), pageable.getSort()))
+                .thenReturn(Flux.fromIterable(foundItems));
+        when(itemRepository.countItemsBySearch(search)).thenReturn(Mono.just(2L));
 
-        PageResult<ItemRsDto> currentResult = itemService.getAllByParams(search, pageable);
+        StepVerifier.create(itemService.getAllByParams(search, pageable))
+                .assertNext(result -> {
+                    assertEquals(foundItems.size(), result.foundItems().getFirst().size());
+                    assertEquals(5, result.page().getSize());
+                })
+                .verifyComplete();
 
-        assertEquals(5, currentResult.page().getSize());
-        assertEquals(1, currentResult.foundItems().size());
-        assertEquals(2, currentResult.foundItems().getFirst().size());
-        verify(itemRepositoryOld).findAllByTitleOrDescription(search, pageable);
+
+        verify(itemRepository).findAllByTitleOrDescription(search, pageable.getPageSize(), pageable.getOffset(), pageable.getSort());
     }
 
     @Test
     @DisplayName("Получение списка товаров по параметрам поиска")
     void shouldGetAllItemsByParams() {
         String search = "М";
-        ItemRsDto itemRsDto1 = createItemRsDto();
-        itemRsDto1.setId(1L);
+        ItemRsDto itemRsDto1 = createItemRsDto(1L);
 
         Pageable pageable = PageRequest.of(1, 5, Sort.unsorted());
         List<ItemRsDto> foundItems = List.of(itemRsDto1);
-        Page<ItemRsDto> mockPage = new PageImpl<>(foundItems, pageable, foundItems.size());
 
-        when(itemRepositoryOld.findAllByTitleOrDescription(search, pageable)).thenReturn(mockPage);
+        when(itemRepository.findAllByTitleOrDescription(search, pageable.getPageSize(), pageable.getOffset(), pageable.getSort()))
+                .thenReturn(Flux.fromIterable(foundItems));
+        when(itemRepository.countItemsBySearch(search)).thenReturn(Mono.just(2L));
 
-        PageResult<ItemRsDto> currentResult = itemService.getAllByParams(search, pageable);
+        StepVerifier.create(itemService.getAllByParams(search, pageable))
+                .assertNext(result -> {
+                    assertEquals(foundItems.size(), result.foundItems().getFirst().size());
+                    assertEquals(5, result.page().getSize());
+                })
+                .verifyComplete();
 
-        assertEquals(5, currentResult.page().getSize());
-        assertEquals(1, currentResult.foundItems().size());
-        assertEquals(1, currentResult.foundItems().getFirst().size());
-        verify(itemRepositoryOld).findAllByTitleOrDescription(search, pageable);
+        verify(itemRepository).findAllByTitleOrDescription(search, pageable.getPageSize(), pageable.getOffset(), pageable.getSort());
     }
 
     @Test
     @DisplayName("Успешный поиск товара по его ID")
     void shouldFindItemById() {
         Long itemId = 1L;
-        ItemRsDto item = createItemRsDto();
-        item.setId(itemId);
+        ItemRsDto item = createItemRsDto(itemId);
 
-        when(itemRepositoryOld.findItemById(itemId)).thenReturn(Optional.of(item));
+        when(itemRepository.findItemById(itemId)).thenReturn(Mono.just(item));
 
-        ItemRsDto foundItem = itemService.findItemById(itemId);
+        StepVerifier.create(itemService.findItemById(itemId))
+                .assertNext(result -> {
+                    assertEquals(itemId, result.id());
+                    assertEquals(item.title(), result.title());
+                    assertEquals(item.description(), result.description());
+                    assertEquals(item.count(), result.count());
+                    assertEquals(item.price(), result.price());
+                })
+                .verifyComplete();
 
-        assertEquals(item.getId(), foundItem.getId());
-        assertEquals(item.getTitle(), foundItem.getTitle());
-        assertEquals(item.getDescription(), foundItem.getDescription());
-        assertEquals(item.getPrice(), foundItem.getPrice());
-        verify(itemRepositoryOld).findItemById(itemId);
+        verify(itemRepository).findItemById(itemId);
     }
 
     @Test
@@ -79,10 +107,14 @@ public class ItemServiceTest {
     void shouldThrowObjectNotFoundException() {
         Long itemId = 1L;
 
-        when(itemRepositoryOld.findItemById(itemId)).thenThrow(ObjectNotFoundException.class);
+        when(itemRepository.findItemById(itemId)).thenReturn(Mono.error(new ObjectNotFoundException("Товар", itemId)));
 
-        assertThrows(ObjectNotFoundException.class, () -> itemService.findItemById(itemId));
-        verify(itemRepositoryOld).findItemById(itemId);
+        StepVerifier.create(itemService.findItemById(itemId))
+                .expectErrorMatches(throwable ->
+                        throwable instanceof ObjectNotFoundException &&
+                                throwable.getMessage().contains(itemId.toString()))
+                .verify();
+
+        verify(itemRepository).findItemById(itemId);
     }
-    */
 }

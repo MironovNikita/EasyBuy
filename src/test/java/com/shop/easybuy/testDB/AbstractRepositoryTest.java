@@ -4,6 +4,7 @@ import com.shop.easybuy.repository.cart.CartRepository;
 import com.shop.easybuy.repository.item.ItemRepository;
 import com.shop.easybuy.repository.order.OrderItemRepository;
 import com.shop.easybuy.repository.order.OrderRepository;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.r2dbc.DataR2dbcTest;
@@ -14,7 +15,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import reactor.core.publisher.Mono;
+import reactor.core.publisher.Flux;
 
 import java.util.Set;
 
@@ -30,7 +31,7 @@ import java.util.Set;
         )
 )
 @ActiveProfiles("test")
-@ContextConfiguration(classes = {TestLiquibaseConfig.class})
+@ContextConfiguration(classes = {LiquibaseTestConfig.class})
 public abstract class AbstractRepositoryTest {
 
     private static final Set<String> ALLOWED_TABLES = Set.of("cart", "order_items", "orders");
@@ -40,20 +41,17 @@ public abstract class AbstractRepositoryTest {
         registry.add("spring.r2dbc.url", CommonPostgresContainer::getR2dbcUrl);
         registry.add("spring.r2dbc.username", CommonPostgresContainer::getUsername);
         registry.add("spring.r2dbc.password", CommonPostgresContainer::getPassword);
+    }
 
-        registry.add("spring.datasource.url", CommonPostgresContainer::getJdbcUrl);
-        registry.add("spring.datasource.username", CommonPostgresContainer::getUsername);
-        registry.add("spring.datasource.password", CommonPostgresContainer::getPassword);
-
-        registry.add("spring.liquibase.enabled", () -> true);
+    @BeforeAll
+    static void initializeLiquibase() throws Exception {
+        LiquibaseTestConfig.runLiquibase();
     }
 
     @BeforeEach
     void clearTables(@Autowired DatabaseClient client) {
-        Mono.when(
-                ALLOWED_TABLES.stream()
-                        .map(t -> Mono.defer(() -> client.sql("TRUNCATE TABLE " + t + " RESTART IDENTITY CASCADE").then()))
-                        .toList()
-        ).block();
+        Flux.fromIterable(ALLOWED_TABLES)
+                .flatMap(t -> client.sql("TRUNCATE TABLE " + t + " RESTART IDENTITY CASCADE").then())
+                .blockLast();
     }
 }

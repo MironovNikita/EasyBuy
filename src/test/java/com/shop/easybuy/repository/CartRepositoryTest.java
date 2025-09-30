@@ -2,7 +2,6 @@ package com.shop.easybuy.repository;
 
 import com.shop.easybuy.entity.cart.CartItem;
 import com.shop.easybuy.repository.cart.CartRepository;
-import com.shop.easybuy.testDB.AbstractRepositoryTest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

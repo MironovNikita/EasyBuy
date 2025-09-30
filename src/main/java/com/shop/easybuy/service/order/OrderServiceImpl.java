@@ -24,7 +24,6 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-//TODO Навести порядок
 public class OrderServiceImpl implements OrderService {
 
     private final OrderRepository orderRepository;

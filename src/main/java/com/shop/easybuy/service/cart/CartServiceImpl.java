@@ -19,7 +19,6 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-//TODO Навести порядок в классе
 public class CartServiceImpl implements CartService {
 
     private static final int rowSize = 5;

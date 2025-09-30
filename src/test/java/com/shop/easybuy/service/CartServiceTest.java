@@ -77,7 +77,7 @@ public class CartServiceTest {
         when(cartRepository.deleteCartItemByItemId(itemId)).thenReturn(Mono.empty());
 
         StepVerifier.create(cartService.changeQuantity(itemId, ActionEnum.DELETE))
-                        .verifyComplete();
+                .verifyComplete();
 
         verify(cartRepository).deleteCartItemByItemId(itemId);
         verify(cartRepository, never()).addItemToCart(cartItem);
@@ -96,10 +96,10 @@ public class CartServiceTest {
         when(itemRepository.findAllInCart()).thenReturn(Flux.fromIterable(items));
 
         StepVerifier.create(cartService.getAllItems())
-                        .assertNext(found -> {
-                            assertEquals(Utils.mergeList(found.getFoundItems()).size(), items.size());
-                            assertEquals(found.getTotalCount(), 20000L);
-                        })
+                .assertNext(found -> {
+                    assertEquals(Utils.mergeList(found.getFoundItems()).size(), items.size());
+                    assertEquals(found.getTotalCount(), 20000L);
+                })
                 .verifyComplete();
 
         verify(itemRepository).findAllInCart();
@@ -112,7 +112,7 @@ public class CartServiceTest {
         when(cartRepository.clearCart()).thenReturn(Mono.empty());
 
         StepVerifier.create(cartService.clearCart())
-                        .verifyComplete();
+                .verifyComplete();
 
         verify(cartRepository).clearCart();
         verifyNoInteractions(itemRepository);

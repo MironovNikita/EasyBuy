@@ -1,9 +1,7 @@
 package com.shop.easybuy.testDB;
 
 import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
-@Testcontainers
 public class CommonPostgresContainer {
 
     public static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:17")

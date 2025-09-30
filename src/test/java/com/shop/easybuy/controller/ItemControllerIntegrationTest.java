@@ -1,229 +1,228 @@
 package com.shop.easybuy.controller;
 
 import com.shop.easybuy.common.entity.ActionEnum;
-import com.shop.easybuy.common.entity.SortEnum;
-import com.shop.easybuy.common.exception.ObjectNotFoundException;
+import com.shop.easybuy.entity.cart.CartItem;
 import com.shop.easybuy.entity.item.ItemRsDto;
-import com.shop.easybuy.utils.Utils;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.data.domain.Page;
-import org.springframework.test.context.jdbc.Sql;
-import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.web.reactive.function.BodyInserters;
 
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.contains;
+import static com.shop.easybuy.DataInserter.insertIntoCartTable;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 public class ItemControllerIntegrationTest extends BaseIntegrationTest {
-/**
+
     @Test
     @DisplayName("Редирект на главную страницу")
-    void shouldRedirectToMainPage() throws Exception {
+    void shouldRedirectToMainPage() {
 
-        mockMvc.perform(get("/"))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/main/items"));
+        webClient.get()
+                .uri("/")
+                .exchange()
+                .expectStatus().is3xxRedirection()
+                .expectHeader().valueEquals("Location", "/main/items");
     }
 
     @Test
     @DisplayName("Главная страница без сортировки и строки поиска")
-    void shouldShowMainPageWithoutSortAndSearch() throws Exception {
+    void shouldShowMainPageWithoutSortAndSearch() {
 
-        MvcResult mvcResult = mockMvc.perform(get("/main/items"))
-                .andExpect(status().isOk())
-                .andExpect(view().name("main"))
-                .andExpect(model().attributeExists("items"))
-                .andExpect(model().attributeExists("search"))
-                .andExpect(model().attributeExists("paging"))
-                .andExpect(model().attributeExists("sort"))
-                .andReturn();
-
-        Map<String, Object> result = Objects.requireNonNull(Objects.requireNonNull(mvcResult.getModelAndView()).getModel());
-        @SuppressWarnings("unchecked")
-        var items = (List<List<ItemRsDto>>) result.get("items");
-        var foundItems = Utils.mergeList(items);
-        var search = result.get("search");
-        @SuppressWarnings("unchecked")
-        var paging = (Page<ItemRsDto>) result.get("paging");
-        var sort = result.get("sort");
-
-        assertEquals(foundItems.size(), 6);
-        assertTrue(foundItems.stream().map(ItemRsDto::getId).toList().containsAll(List.of(1L, 2L, 3L, 4L, 5L, 6L)));
-        assertEquals(search, "");
-        assertEquals(paging.getTotalPages(), 1);
-        assertEquals(paging.getSize(), 10);
-        assertEquals(paging.getTotalElements(), 6);
-        assertEquals(sort, "NO");
+        webClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/main/items")
+                        .queryParam("search", "")
+                        .queryParam("sort", "NO")
+                        .queryParam("pageSize", 5)
+                        .queryParam("pageNumber", 0)
+                        .build())
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(String.class)
+                .consumeWith(result -> {
+                    String body = result.getResponseBody();
+                    assertNotNull(body);
+                    assertTrue(body.contains("Майка"));
+                    assertTrue(body.contains("Стандартная лампочка"));
+                    assertTrue(body.contains("Колбаса"));
+                    assertTrue(body.contains("Моющее средство"));
+                    assertTrue(body.contains("Йогурт"));
+                    assertTrue(body.contains("Страница: 1"));
+                });
     }
 
     @Test
     @DisplayName("Главная страница с сортировкой и строкой поиска")
-    void shouldShowMainPageWithSortAndSearch() throws Exception {
+    void shouldShowMainPageWithSortAndSearch() {
 
-        MvcResult mvcResult = mockMvc.perform(get("/main/items")
-                        .param("sort", SortEnum.ALPHA.name())
-                        .param("search", "й")
-                        .param("pageSize", "5"))
-                .andExpect(status().isOk())
-                .andExpect(view().name("main"))
-                .andExpect(model().attributeExists("items"))
-                .andExpect(model().attributeExists("search"))
-                .andExpect(model().attributeExists("paging"))
-                .andExpect(model().attributeExists("sort"))
-                .andReturn();
-
-        Map<String, Object> result = Objects.requireNonNull(Objects.requireNonNull(mvcResult.getModelAndView()).getModel());
-        @SuppressWarnings("unchecked")
-        var items = (List<List<ItemRsDto>>) result.get("items");
-        var foundItems = Utils.mergeList(items);
-        var search = result.get("search");
-        @SuppressWarnings("unchecked")
-        var paging = (Page<ItemRsDto>) result.get("paging");
-        var sort = result.get("sort");
-
-        var foundItemsIds = foundItems.stream().map(ItemRsDto::getId).toList();
-
-        assertEquals(foundItems.size(), 3);
-        assertTrue(foundItemsIds.containsAll(List.of(5L, 1L, 6L)));
-        assertThat(foundItemsIds, contains(5L, 1L, 6L));
-        assertEquals(search, "й");
-        assertEquals(paging.getTotalPages(), 1);
-        assertEquals(paging.getSize(), 5);
-        assertEquals(paging.getTotalElements(), 3);
-        assertEquals(sort, "ALPHA");
+        webClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/main/items")
+                        .queryParam("search", "ма")
+                        .queryParam("sort", "ALPHA")
+                        .queryParam("pageSize", 5)
+                        .queryParam("pageNumber", 0)
+                        .build())
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(String.class)
+                .consumeWith(result -> {
+                    String body = result.getResponseBody();
+                    assertNotNull(body);
+                    assertTrue(body.contains("Майка"));
+                    assertTrue(body.contains("Мармеладки"));
+                    assertTrue(body.contains("Страница: 1"));
+                });
     }
 
     @Test
     @DisplayName("Изменение количества товара в корзине на главной странице: PLUS")
-    void shouldChangeQuantityOnMainPagePlus() throws Exception {
+    void shouldChangeQuantityOnMainPagePlus() {
         Long itemId = 1L;
 
-        mockMvc.perform(post("/main/items/%d".formatted(itemId))
-                        .param("action", ActionEnum.PLUS.name()))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/main/items?search=&sort=NO&pageSize=10&pageNumber=0"))
-                .andExpect(view().name("redirect:/main/items"))
-                .andReturn();
+        webClient.post()
+                .uri("/main/items/%d".formatted(itemId))
+                .body(BodyInserters.fromFormData("action", ActionEnum.PLUS.name())
+                        .with("search", "")
+                        .with("sort", "NO")
+                        .with("pageNumber", "0")
+                        .with("pageSize", "10"))
+                .exchange()
+                .expectStatus().is3xxRedirection()
+                .expectHeader().valueEquals("Location", "/main/items?search=&sort=NO&pageNumber=0&pageSize=10");
 
-        ItemRsDto changedItem = itemService.findItemById(itemId);
-
-        assertEquals(changedItem.getId(), itemId);
-        assertEquals(changedItem.getCount(), 1);
+        CartItem cartItem = cartRepository.findCartItemByItemId(itemId).block();
+        assertNotNull(cartItem);
+        assertEquals(1, cartItem.getQuantity());
     }
 
     @Test
-    @Sql(statements = "INSERT INTO cart(item_id, quantity, added_at) VALUES(1, 3, '2025-09-14 21:56:39.047928')")
     @DisplayName("Изменение количества товара в корзине на главной странице: MINUS")
-    void shouldChangeQuantityOnMainPageMinus() throws Exception {
+    void shouldChangeQuantityOnMainPageMinus() {
         Long itemId = 1L;
 
-        mockMvc.perform(post("/main/items/%d".formatted(itemId))
-                        .param("action", ActionEnum.MINUS.name()))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/main/items?search=&sort=NO&pageSize=10&pageNumber=0"))
-                .andExpect(view().name("redirect:/main/items"))
-                .andReturn();
+        insertIntoCartTable(databaseClient, List.of(
+                new CartItem(itemId, 3)
+        )).block();
 
-        ItemRsDto changedItem = itemService.findItemById(itemId);
+        webClient.post()
+                .uri("/main/items/%d".formatted(itemId))
+                .body(BodyInserters.fromFormData("action", ActionEnum.MINUS.name())
+                        .with("search", "")
+                        .with("sort", "NO")
+                        .with("pageNumber", "0")
+                        .with("pageSize", "10"))
+                .exchange()
+                .expectStatus().is3xxRedirection()
+                .expectHeader().valueEquals("Location", "/main/items?search=&sort=NO&pageNumber=0&pageSize=10");
 
-        assertEquals(changedItem.getId(), itemId);
-        assertEquals(changedItem.getCount(), 2);
+        CartItem cartItem = cartRepository.findCartItemByItemId(itemId).block();
+        assertNotNull(cartItem);
+        assertEquals(2, cartItem.getQuantity());
     }
 
     @Test
-    @Sql(statements = "INSERT INTO cart(item_id, quantity, added_at) VALUES(1, 3, '2025-09-14 21:56:39.047928')")
     @DisplayName("Изменение количества товара в корзине на главной странице: DELETE")
-    void shouldChangeQuantityOnMainPageDelete() throws Exception {
+    void shouldChangeQuantityOnMainPageDelete() {
         Long itemId = 1L;
 
-        mockMvc.perform(post("/main/items/%d".formatted(itemId))
-                        .param("action", ActionEnum.DELETE.name()))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/main/items?search=&sort=NO&pageSize=10&pageNumber=0"))
-                .andExpect(view().name("redirect:/main/items"))
-                .andReturn();
+        insertIntoCartTable(databaseClient, List.of(
+                new CartItem(itemId, 3)
+        )).block();
 
-        ItemRsDto changedItem = itemService.findItemById(itemId);
+        webClient.post()
+                .uri("/main/items/%d".formatted(itemId))
+                .body(BodyInserters.fromFormData("action", ActionEnum.DELETE.name())
+                        .with("search", "")
+                        .with("sort", "NO")
+                        .with("pageNumber", "0")
+                        .with("pageSize", "10"))
+                .exchange()
+                .expectStatus().is3xxRedirection()
+                .expectHeader().valueEquals("Location", "/main/items?search=&sort=NO&pageNumber=0&pageSize=10");
 
-        assertEquals(changedItem.getId(), itemId);
-        assertEquals(changedItem.getCount(), 0);
+        CartItem cartItem = cartRepository.findCartItemByItemId(itemId).block();
+        assertNull(cartItem);
     }
 
     @Test
     @DisplayName("Отображение страницы товара")
-    void shouldShowItemPageIfExists() throws Exception {
+    void shouldShowItemPageIfExists() {
 
         Long itemId = 1L;
 
-        MvcResult mvcResult = mockMvc.perform(get("/items/%d".formatted(itemId)))
-                .andExpect(status().isOk())
-                .andExpect(view().name("item"))
-                .andExpect(model().attributeExists("item"))
-                .andReturn();
+        webClient.get()
+                .uri("/items/%d".formatted(itemId))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(String.class)
+                .consumeWith(result -> {
+                    String body = result.getResponseBody();
+                    assertNotNull(body);
+                    assertTrue(body.contains("Майка"));
+                });
 
-        Map<String, Object> result = Objects.requireNonNull(Objects.requireNonNull(mvcResult.getModelAndView()).getModel());
-        var foundItem = (ItemRsDto) result.get("item");
-
-        assertEquals(foundItem.getId(), itemId);
-        assertEquals(foundItem.getCount(), 0);
-        assertEquals(foundItem.getPrice(), 5000L);
+        ItemRsDto item = itemRepository.findItemById(itemId).block();
+        assertNotNull(item);
+        assertTrue(item.title().contains("Майка"));
     }
 
     @Test
     @DisplayName("Ошибка поиска товара по несуществующему ID")
-    void shouldThrowObjectNotFoundExceptionIfNonExistentItemId() throws Exception {
+    void shouldThrowObjectNotFoundExceptionIfNonExistentItemId() {
         Long nonExistentItemId = 9999L;
 
-        mockMvc.perform(get("/items/%d".formatted(nonExistentItemId)))
-                .andExpect(status().isNotFound())
-                .andExpect(view().name("error"));
+        webClient.get()
+                .uri("/items/%d".formatted(nonExistentItemId))
+                .exchange()
+                .expectStatus().isNotFound()
+                .expectBody(String.class)
+                .consumeWith(result -> {
+                    String body = result.getResponseBody();
+                    assertNotNull(body);
+                    assertTrue(body.contains("Товар с ID: 9999 не найден!"));
+                });
 
-        assertThrows(ObjectNotFoundException.class, () -> itemService.findItemById(nonExistentItemId));
+        ItemRsDto item = itemRepository.findItemById(nonExistentItemId).block();
+        assertNull(item);
     }
 
     @Test
     @DisplayName("Изменение количества товара на странице товара: PLUS")
-    void shouldChangeQuantityOnItemPagePlus() throws Exception {
-
+    void shouldChangeQuantityOnItemPagePlus() {
         Long itemId = 1L;
 
-        mockMvc.perform(post("/items/%d".formatted(itemId))
-                        .param("action", ActionEnum.PLUS.name()))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(view().name("redirect:/items/%d".formatted(itemId)))
-                .andReturn();
+        webClient.post()
+                .uri("/items/%d".formatted(itemId))
+                .body(BodyInserters.fromFormData("action", ActionEnum.PLUS.name()))
+                .exchange()
+                .expectStatus().is3xxRedirection()
+                .expectHeader().valueEquals("Location", "/items/%d".formatted(itemId));
 
-        ItemRsDto changedItem = itemService.findItemById(itemId);
-
-        assertEquals(changedItem.getId(), itemId);
-        assertEquals(changedItem.getCount(), 1);
+        CartItem cartItem = cartRepository.findCartItemByItemId(itemId).block();
+        assertNotNull(cartItem);
+        assertEquals(1, cartItem.getQuantity());
     }
 
     @Test
-    @Sql(statements = "INSERT INTO cart(item_id, quantity, added_at) VALUES(1, 3, '2025-09-14 21:56:39.047928')")
     @DisplayName("Изменение количества товара на странице товара: MINUS")
-    void shouldChangeQuantityOnItemPageMinus() throws Exception {
-
+    void shouldChangeQuantityOnItemPageMinus() {
         Long itemId = 1L;
 
-        mockMvc.perform(post("/items/%d".formatted(itemId))
-                        .param("action", ActionEnum.MINUS.name()))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(view().name("redirect:/items/%d".formatted(itemId)))
-                .andReturn();
+        insertIntoCartTable(databaseClient, List.of(
+                new CartItem(itemId, 3)
+        )).block();
 
-        ItemRsDto changedItem = itemService.findItemById(itemId);
+        webClient.post()
+                .uri("/items/%d".formatted(itemId))
+                .body(BodyInserters.fromFormData("action", ActionEnum.MINUS.name()))
+                .exchange()
+                .expectStatus().is3xxRedirection()
+                .expectHeader().valueEquals("Location", "/items/%d".formatted(itemId));
 
-        assertEquals(changedItem.getId(), itemId);
-        assertEquals(changedItem.getCount(), 2);
+        CartItem cartItem = cartRepository.findCartItemByItemId(itemId).block();
+        assertNotNull(cartItem);
+        assertEquals(2, cartItem.getQuantity());
     }
-*/
 }

@@ -11,10 +11,4 @@ public interface OrderService {
     Mono<OrderRsDto> findById(Long id);
 
     Flux<OrderRsDto> findAll();
-
-    //Order buyItemsInCart();
-
-    //Order findById(Long id);
-
-    //List<Order> findAll();
 }

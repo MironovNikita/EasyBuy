@@ -4,7 +4,6 @@ import com.shop.easybuy.entity.order.Order;
 import com.shop.easybuy.entity.order.OrderItem;
 import com.shop.easybuy.repository.order.OrderItemRepository;
 import com.shop.easybuy.repository.order.OrderRepository;
-import com.shop.easybuy.testDB.AbstractRepositoryTest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

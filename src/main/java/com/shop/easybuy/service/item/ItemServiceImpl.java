@@ -21,7 +21,6 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-//TODO Переделать интерфейс
 public class ItemServiceImpl implements ItemService {
 
     private static final int rowSize = 5;

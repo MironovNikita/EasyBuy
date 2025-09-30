@@ -8,7 +8,7 @@ import reactor.core.publisher.Mono;
 public interface CartRepository extends R2dbcRepository<CartItem, Long>, CartRepositoryCustom {
 
     @Query("DELETE FROM cart")
-    Mono<Integer> clearCart();
+    Mono<Void> clearCart();
 
     Mono<CartItem> findCartItemByItemId(Long itemId);
 

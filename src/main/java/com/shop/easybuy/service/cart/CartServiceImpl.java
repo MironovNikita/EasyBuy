@@ -88,7 +88,7 @@ public class CartServiceImpl implements CartService {
     @Transactional
     public Mono<Void> clearCart() {
         return cartRepository.clearCart()
-                .doOnSuccess(count -> log.info("Корзина была очищена. Удалено {} товаров.", count))
+                .doOnSuccess(clear -> log.info("Корзина была очищена."))
                 .then();
     }
 

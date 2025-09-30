@@ -7,7 +7,7 @@
 </p>
 
 # 🛍️ Интернет-магазин Easy Buy
-Это веб-приложение — интернет-магазин, реализованный на Java 21 с использованием Spring Framework версии 6.1 и выше (со Spring Boot), которое может работать в любом современном сервлет-контейнере (Jetty или Tomcat). Проект управляется с помощью системы сборки Gradle. Также в проекте предусмотрено развёртывание в контейнерах Docker с применением Liquibase-скриптов для БД. Об этом далее.
+Это веб-приложение — интернет-магазин, реализованный на Java 21 с использованием Spring Framework версии 6.1 и выше (со Spring Boot), которое может работать в любом современном сервлет-контейнере (Netty). Проект управляется с помощью системы сборки Gradle. Проект основан на реактивном стеке Spring WebFlux и R2DBC, что позволило реализовать полностью неблокирующее взаимодействие с базой данных и построить высокопроизводительное масштабируемое веб-приложение. Также в проекте предусмотрено развёртывание в контейнерах Docker с применением Liquibase-скриптов для БД. Об этом далее.
 
 ## 📝 Описание
 Магазин состоит из шести веб-страниц:
@@ -79,17 +79,19 @@ _**С помощью Docker**_:
 
 Как можем видеть из логов, наши Liquibase-скрипты отрабатывают успешно:
 ```java
-eb_app_container       | 2025-09-15 - 19:11:25.960 (Z)  INFO 1 ---> [main] liquibase.util : UPDATE SUMMARY
-eb_app_container       | 2025-09-15 - 19:11:25.960 (Z)  INFO 1 ---> [main] liquibase.util : Run:                          5
-eb_app_container       | 2025-09-15 - 19:11:25.960 (Z)  INFO 1 ---> [main] liquibase.util : Previously run:               0
-eb_app_container       | 2025-09-15 - 19:11:25.960 (Z)  INFO 1 ---> [main] liquibase.util : Filtered out:                 0
-eb_app_container       | 2025-09-15 - 19:11:25.960 (Z)  INFO 1 ---> [main] liquibase.util : -------------------------------
-eb_app_container       | 2025-09-15 - 19:11:25.960 (Z)  INFO 1 ---> [main] liquibase.util : Total change sets:            5
-eb_app_container       | 2025-09-15 - 19:11:25.961 (Z)  INFO 1 ---> [main] liquibase.util : Update summary generated
-eb_app_container       | 2025-09-15 - 19:11:25.963 (Z)  INFO 1 ---> [main] liquibase.command : Update command completed successfully.
-eb_app_container       | 2025-09-15 - 19:11:25.963 (Z)  INFO 1 ---> [main] liquibase.ui : Liquibase: Update has been successful. Rows affected: 11
-eb_app_container       | 2025-09-15 - 19:11:25.967 (Z)  INFO 1 ---> [main] liquibase.lockservice : Successfully released change log lock
-eb_app_container       | 2025-09-15 - 19:11:25.968 (Z)  INFO 1 ---> [main] liquibase.command : Command execution complete
+eb_app_container       | 2025-09-30 - 22:55:09.650 (Z)  INFO 1 ---> [main] liquibase.changelog : ChangeSet db/changelog/liquibase/fill-in-items.xml::fill_data::MironovNikita ran successfully in 19ms
+eb_app_container       | 2025-09-30 - 22:55:09.659 (Z)  INFO 1 ---> [main] liquibase.util : UPDATE SUMMARY
+eb_app_container       | 2025-09-30 - 22:55:09.659 (Z)  INFO 1 ---> [main] liquibase.util : Run:                          5
+eb_app_container       | 2025-09-30 - 22:55:09.659 (Z)  INFO 1 ---> [main] liquibase.util : Previously run:               0
+eb_app_container       | 2025-09-30 - 22:55:09.659 (Z)  INFO 1 ---> [main] liquibase.util : Filtered out:                 0
+eb_app_container       | 2025-09-30 - 22:55:09.659 (Z)  INFO 1 ---> [main] liquibase.util : -------------------------------
+eb_app_container       | 2025-09-30 - 22:55:09.659 (Z)  INFO 1 ---> [main] liquibase.util : Total change sets:            5
+eb_app_container       | 2025-09-30 - 22:55:09.660 (Z)  INFO 1 ---> [main] liquibase.util : Update summary generated
+eb_app_container       | 2025-09-30 - 22:55:09.663 (Z)  INFO 1 ---> [main] liquibase.command : Update command completed successfully.
+eb_app_container       | 2025-09-30 - 22:55:09.664 (Z)  INFO 1 ---> [main] liquibase.ui : Liquibase: Update has been successful. Rows affected: 11
+eb_app_container       | 2025-09-30 - 22:55:09.668 (Z)  INFO 1 ---> [main] liquibase.lockservice : Successfully released change log lock
+eb_app_container       | 2025-09-30 - 22:55:09.670 (Z)  INFO 1 ---> [main] liquibase.command : Command execution complete
+eb_app_container       | 2025-09-30 - 22:55:11.320 (Z)  INFO 1 ---> [main] o.s.b.w.e.netty.NettyWebServer : Netty started on port 8080 (http)
 ```
 
 Теперь можем перейти непосредственно к самому магазину. Главная страница выглядит так: 
@@ -150,29 +152,64 @@ eb_app_container       | 2025-09-15 - 19:11:25.968 (Z)  INFO 1 ---> [main] liqui
 
 
 ## 🗒️ Логирование 🔍
-В приложении также предусмотрено логирование. Логи пишутся непосредственно в консоль Tomcat, встроенного в наш Spring Boot. Ниже приведён пример логов:
+В приложении также предусмотрено логирование. Логи пишутся непосредственно в консоль Netty, встроенного в наш реактивный контекст. Ниже приведён пример логов:
 ```java
-eb_app_container       | 2025-09-15 - 19:26:43.044 (Z)  INFO 1 ---> [http-nio-8080-exec-3] c.s.e.service.cart.CartServiceImpl : В корзине найдено 2 товаров.
-eb_app_container       | 2025-09-15 - 19:26:43.052 (Z)  INFO 1 ---> [http-nio-8080-exec-3] c.s.e.c.i.RequestLoggingInterceptor : Запрос GET /easy-buy/cart/items выполнен за 19 мс.
-eb_app_container       | 2025-09-15 - 19:27:50.460 (Z)  INFO 1 ---> [http-nio-8080-exec-5] c.s.e.service.cart.CartServiceImpl : В корзине найдено 2 товаров.
-eb_app_container       | 2025-09-15 - 19:27:50.488 (Z)  INFO 1 ---> [http-nio-8080-exec-5] c.s.e.service.cart.CartServiceImpl : Корзина была очищена.
-eb_app_container       | 2025-09-15 - 19:27:50.488 (Z)  INFO 1 ---> [http-nio-8080-exec-5] c.s.e.service.order.OrderServiceImpl : Сформирован заказ с ID 1 и количеством товаров 2.
-eb_app_container       | 2025-09-15 - 19:27:50.515 (Z)  INFO 1 ---> [http-nio-8080-exec-5] c.s.e.c.i.RequestLoggingInterceptor : Запрос POST /easy-buy/buy выполнен за 59 мс.
-eb_app_container       | 2025-09-15 - 19:27:50.532 (Z)  INFO 1 ---> [http-nio-8080-exec-6] c.s.e.service.order.OrderServiceImpl : Найден заказ с ID 1 и количеством товаров 2.
-eb_app_container       | 2025-09-15 - 19:27:50.545 (Z)  INFO 1 ---> [http-nio-8080-exec-6] c.s.e.c.i.RequestLoggingInterceptor : Запрос GET /easy-buy/orders/1 выполнен за 25 мс.
-eb_app_container       | 2025-09-15 - 19:29:18.092 (Z)  INFO 1 ---> [http-nio-8080-exec-9] c.s.e.service.order.OrderServiceImpl : Найдено 1 заказов.
-eb_app_container       | 2025-09-15 - 19:29:18.096 (Z)  INFO 1 ---> [http-nio-8080-exec-9] c.s.e.c.i.RequestLoggingInterceptor : Запрос GET /easy-buy/orders выполнен за 9 мс.
+eb_app_container       | 2025-09-30 - 22:55:29.943 (Z)  INFO 1 ---> [reactor-tcp-epoll-10] c.s.e.service.item.ItemServiceImpl : Запрошенный по ID 1 товар "Майка чёрная М" был найден.
+eb_app_container       | 2025-09-30 - 22:55:29.948 (Z)  INFO 1 ---> [parallel-4] c.s.e.c.filter.RequestLoggingFilter : GET-запрос http://localhost:8080/easy-buy/items/1 выполнен за 9 мс.
+eb_app_container       | 2025-09-30 - 22:55:32.155 (Z)  INFO 1 ---> [reactor-tcp-epoll-10] c.s.e.service.cart.CartServiceImpl : В корзине найдено 1 товаров.
+eb_app_container       | 2025-09-30 - 22:55:32.169 (Z)  INFO 1 ---> [parallel-5] c.s.e.c.filter.RequestLoggingFilter : GET-запрос http://localhost:8080/easy-buy/cart/items выполнен за 25 мс.
+eb_app_container       | 2025-09-30 - 22:55:33.197 (Z)  INFO 1 ---> [reactor-tcp-epoll-10] c.s.e.service.cart.CartServiceImpl : В корзине найдено 1 товаров.
+eb_app_container       | 2025-09-30 - 22:55:33.220 (Z)  INFO 1 ---> [reactor-tcp-epoll-10] c.s.e.service.cart.CartServiceImpl : Корзина была очищена.
+eb_app_container       | 2025-09-30 - 22:55:33.221 (Z)  INFO 1 ---> [reactor-tcp-epoll-10] c.s.e.service.order.OrderServiceImpl : Сформирован заказ с ID 1 и количеством товаров 1.
+eb_app_container       | 2025-09-30 - 22:55:33.228 (Z)  INFO 1 ---> [reactor-tcp-epoll-10] c.s.e.c.filter.RequestLoggingFilter : POST-запрос http://localhost:8080/easy-buy/buy выполнен за 37 мс.
+eb_app_container       | 2025-09-30 - 22:55:33.246 (Z)  INFO 1 ---> [reactor-tcp-epoll-10] c.s.e.service.order.OrderServiceImpl : Найден заказ с ID 1 и количеством товаров 1.
+eb_app_container       | 2025-09-30 - 22:55:33.264 (Z)  INFO 1 ---> [parallel-6] c.s.e.c.filter.RequestLoggingFilter : GET-запрос http://localhost:8080/easy-buy/orders/1?newOrder=true выполнен за 30 мс.
+eb_app_container       | 2025-09-30 - 22:55:34.634 (Z)  INFO 1 ---> [reactor-tcp-epoll-10] c.s.e.service.order.OrderServiceImpl : Найдено 1 заказов.
+eb_app_container       | 2025-09-30 - 22:55:34.643 (Z)  INFO 1 ---> [parallel-7] c.s.e.c.filter.RequestLoggingFilter : GET-запрос http://localhost:8080/easy-buy/orders выполнен за 15 мс.
+eb_app_container       | 2025-09-30 - 22:55:36.160 (Z)  INFO 1 ---> [reactor-tcp-epoll-10] c.s.e.service.order.OrderServiceImpl : Найден заказ с ID 1 и количеством товаров 1.
+eb_app_container       | 2025-09-30 - 22:55:36.167 (Z)  INFO 1 ---> [parallel-8] c.s.e.c.filter.RequestLoggingFilter : GET-запрос http://localhost:8080/easy-buy/orders/1 выполнен за 12 мс.
 ```
 
-Как можно заметить, в логи также пишется и время выполнения запроса. Данную возможность предоставляет [**RequestLoggingInterceptor**](https://github.com/MironovNikita/EasyBuy/blob/main/src/main/java/com/shop/easybuy/common/interceptor/RequestLoggingInterceptor.java) - компонент Spring, реализующий **HandlerInterceptor**, для логирования времени выполнения HTTP-запросов.
+Как можно заметить, в логи также пишется и время выполнения запроса. Данную возможность предоставляет [**RequestLoggingFilter**](https://github.com/MironovNikita/EasyBuy/blob/main/src/main/java/com/shop/easybuy/common/interceptor/RequestLoggingFilter.java) - компонент Spring, реализующий **WebFilter**, для логирования времени выполнения HTTP-запросов.
 
-Особенности:
-- Сохраняет время начала запроса в ThreadLocal.
-- После завершения запроса выводит в лог метод, URI и время выполнения в миллисекундах.
-- Автоматически очищает ThreadLocal после завершения запроса, чтобы избежать утечек памяти.
+1. _Назначение_
+Логирует все HTTP-запросы к приложению и время их обработки, кроме ресурсов, которые не нужно трекать (картинки, favicon).
+
+2. _Особенности реализации_
+WebFilter: это реактивный аналог Servlet Filter для WebFlux.
+ServerWebExchange: содержит данные запроса и ответа.
+WebFilterChain: пропускает обработку дальше по цепочке.
 
 ## ✅ Тестирование 🐞
 Как говорилось ранее, для интеграционного тестирования предусмотрен TestContainer для БД. С его настройками можно ознакомиться [**здесь**](https://github.com/MironovNikita/EasyBuy/tree/main/src/test/java/com/shop/easybuy/testDB).
+
+### 1️⃣ CommonPostgresContainer
+Обёртка над Testcontainers для PostgreSQL.
+Стартует контейнер с Postgres и даёт доступ к URL/логину/паролю для JDBC и R2DBC.
+Используется для всех интеграционных тестов, чтобы поднимать изолированную базу.
+
+### 2️⃣ AbstractTestDatabaseInitialization
+Абстрактный базовый класс для тестов, связанных с БД.
+Через @DynamicPropertySource подставляет свойства R2DBC из CommonPostgresContainer.
+Метод initializeLiquibase() гарантирует, что миграции Liquibase выполняются один раз перед тестами.
+
+### 3️⃣ LiquibaseTestConfig
+Конфигурация для запуска Liquibase в тестах.
+Метод runLiquibase() открывает JDBC-соединение к контейнерной БД и применяет все миграции.
+AtomicBoolean initialized → миграции выполняются только один раз за всю сессию тестов.
+
+### 4️⃣ AbstractRepositoryTest
+Базовый класс для тестов репозиториев R2DBC.
+Аннотация @DataR2dbcTest поднимает только нужные репозитории.
+Перед каждым тестом таблицы очищаются (TRUNCATE) через DatabaseClient.
+Ограничение ALLOWED_TABLES → не трогать лишние таблицы.
+
+### 5️⃣ BaseIntegrationTest
+Базовый класс для интеграционных тестов через WebTestClient (т.е. полный путь контроллер → сервис → БД).
+Поднимает весь контекст Spring Boot (@SpringBootTest).
+Автоматически конфигурирует WebTestClient для тестирования HTTP-запросов.
+Перед каждым тестом очищает нужные таблицы.
+Инжектит репозитории и сервисы, чтобы можно было проверять данные напрямую после действий контроллера.
 
 Во время выполнения тестов можем наблюдать запущенный контейнер БД:
 <p align="center">
@@ -181,25 +218,24 @@ eb_app_container       | 2025-09-15 - 19:29:18.096 (Z)  INFO 1 ---> [http-nio-80
 
 </p>
 
-####
-Также для интеграционного тестирования предусмотрено два контекста:
-1. [**BaseIntegrationTest**](https://github.com/MironovNikita/EasyBuy/blob/main/src/test/java/com/shop/easybuy/controller/BaseIntegrationTest.java) - настройка для полного интеграционного тестирования от контроллера до БД.
-2. [**JpaTestConfig**](https://github.com/MironovNikita/EasyBuy/blob/main/src/test/java/com/shop/easybuy/annotation/JpaTestConfig.java) - настройка для интеграционного тестирования только слоя репозиториев с БД.
-
 Стоит отметить, что контейнер поднимается единожды для всех тестов.
-Тестовая БД заполняется также посредством использования Liquibase-скриптов. Но, что важно, для тестирования слоя репозитроиев таблица item не заполняется. Данная настройка достигается за счёт указания контекста применения:
-```java
-context="prod,controller-test"
-```
+Тестовая БД заполняется также посредством использования Liquibase-скриптов.
 
-Помимо заполнения данных через Liquibase-скрипты в некоторых тестах предусмотрено заполнение данных непосредственно для определённого теста. Пример представлен ниже:
+Помимо заполнения данных через Liquibase-скрипты в некоторых тестах предусмотрено заполнение данных непосредственно для определённого теста. За это отвечает утилитный класс [**DataInserter**](https://github.com/MironovNikita/EasyBuy/blob/main/src/test/java/com/shop/easybuy/DataInserter.java) Пример одного из методов представлен ниже:
 ```java
-@Sql(statements = {
-            "INSERT INTO orders(id, total, created_at) VALUES(1, 5000, '2025-09-14 21:56:39.047928')",
-            "INSERT INTO order_items(id, order_id, item_id, count) VALUES(1, 1, 1, 1)",
-            "INSERT INTO orders(id, total, created_at) VALUES(2, 10000, '2025-09-15 11:56:39.047928')",
-            "INSERT INTO order_items(id, order_id, item_id, count) VALUES(2, 2, 1, 2)"
-    })
+public static Mono<Void> insertIntoCartTable(DatabaseClient client, List<CartItem> itemsInCart) {
+        return Flux.fromIterable(itemsInCart)
+                .flatMap(item -> client.sql(
+                                        "INSERT INTO cart(item_id, quantity, added_at) VALUES(:itemId, :quantity, :addedAt)"
+                                )
+                                .bind("itemId", item.getItemId())
+                                .bind("quantity", item.getQuantity())
+                                .bind("addedAt", item.getAddedAt())
+                                .fetch()
+                                .rowsUpdated()
+                )
+                .then();
+    }
 ```
 <p align="center">
 
@@ -207,52 +243,13 @@ context="prod,controller-test"
 
 </p>
 
-В результате тестирования завершается три контекста: 
-```java
-2025-09-15 - 22:41:23.194 (+03:00)  INFO 18356 ---> [SpringApplicationShutdownHook] o.s.o.j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
-2025-09-15 - 22:41:23.197 (+03:00)  INFO 18356 ---> [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource : HikariPool-1 - Shutdown initiated...
-2025-09-15 - 22:41:23.203 (+03:00)  INFO 18356 ---> [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource : HikariPool-1 - Shutdown completed.
-2025-09-15 - 22:41:23.206 (+03:00)  INFO 18356 ---> [SpringApplicationShutdownHook] o.s.o.j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
-2025-09-15 - 22:41:23.207 (+03:00)  INFO 18356 ---> [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource : HikariPool-2 - Shutdown initiated...
-2025-09-15 - 22:41:23.212 (+03:00)  INFO 18356 ---> [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource : HikariPool-2 - Shutdown completed.
-2025-09-15 - 22:41:23.215 (+03:00)  INFO 18356 ---> [SpringApplicationShutdownHook] o.s.o.j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
-2025-09-15 - 22:41:23.216 (+03:00)  INFO 18356 ---> [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource : HikariPool-3 - Shutdown initiated...
-2025-09-15 - 22:41:23.223 (+03:00)  INFO 18356 ---> [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource : HikariPool-3 - Shutdown completed.
-```
-Третий контекст появляется из-за самого простого теста SpringBoot - **contextLoads()**.
-
-## 🛠️ Зависимости проекта ⚙️
-**Spring Boot Starters:**
-- **``spring-boot-starter-web``** – для создания REST-контроллеров и веб-приложения.
-- **``spring-boot-starter-thymeleaf``** – для рендеринга HTML-шаблонов с Thymeleaf.
-- **``spring-boot-starter-data-jpa``** – для работы с базой данных через JPA.
-- **``spring-boot-starter-validation``** – для валидации входящих данных.
-
-**Базы данных и миграции:**
-- **``postgresql``** – драйвер PostgreSQL.
-- **``liquibase-core``** – для управления миграциями БД.
-
-**Маппинг DTO:**
-- **``mapstruct``** – генерация мапперов между DTO и сущностями.
-
-**Ломбок:**
-- **``lombok``** – сокращение шаблонного кода (геттеры, сеттеры, конструкторы и др.).
-
-**Тестирование:**
-- **``spring-boot-starter-test``** – тестирование Spring-приложений (JUnit, Mockito, Assertions).
-- **``testcontainers и testcontainers-postgresql``** – интеграционные тесты с контейнерной БД PostgreSQL.
-
-Компиляция и аннотации:
-- **``annotationProcessor и compileOnly``** для Lombok и MapStruct – генерация кода на этапе компиляции.
-
-Все указанные зависимости можно найти в [**build.gradle**](https://github.com/MironovNikita/EasyBuy/blob/main/build.gradle).
+Все зависимости проекта можно найти в [**build.gradle**](https://github.com/MironovNikita/EasyBuy/blob/main/build.gradle).
 
 Результат сборки проекта:
 ```java
-> Task :test
 --------------------------------------------------
-Тестов всего: 42
-Успешно:      42
+Тестов всего: 51
+Успешно:      51
 Провалено:    0
 Пропущено:    0
 Результат:    SUCCESS
@@ -261,7 +258,7 @@ context="prod,controller-test"
 > Task :check
 > Task :build
 
-BUILD SUCCESSFUL in 16s
+BUILD SUCCESSFUL in 14s
 9 actionable tasks: 9 executed
-22:57:57: Execution finished 'clean build'.
+2:05:21: Execution finished 'clean build'.
 ```

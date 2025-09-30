@@ -1,134 +1,157 @@
 package com.shop.easybuy.controller;
 
-import com.shop.easybuy.common.exception.CartEmptyException;
-import com.shop.easybuy.common.exception.ObjectNotFoundException;
+import com.shop.easybuy.entity.cart.CartItem;
 import com.shop.easybuy.entity.order.Order;
+import com.shop.easybuy.entity.order.OrderItem;
+import com.shop.easybuy.entity.order.OrderItemDto;
+import com.shop.easybuy.entity.order.OrderRsDto;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.context.jdbc.Sql;
-import org.springframework.test.web.servlet.MvcResult;
 
+import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 
+import static com.shop.easybuy.DataInserter.*;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 public class OrderControllerIntegrationTest extends BaseIntegrationTest {
 
     @Test
-    @Sql(statements = {
-            "INSERT INTO cart(item_id, quantity, added_at) VALUES(1, 3, '2025-09-14 21:56:39.047928')",
-            "INSERT INTO cart(item_id, quantity, added_at) VALUES(2, 5, '2025-09-14 21:57:39.047928')"
-    })
     @DisplayName("Оформление покупки товаров в корзине")
-    void shouldCreateOrder() throws Exception {
-        long orderId = 1L;
+    void shouldCreateOrder() {
+        Long orderId = 1L;
 
-        MvcResult mvcResult = mockMvc.perform(post("/buy"))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/orders/%d".formatted(orderId)))
-                .andReturn();
+        insertIntoCartTable(databaseClient, List.of(
+                new CartItem(1L, 3),
+                new CartItem(2L, 5)
+        )).block();
 
-        Map<String, Object> flashMap = Objects.requireNonNull(mvcResult.getFlashMap());
-        Order order = (Order) flashMap.get("order");
+        webClient.post()
+                .uri("/buy")
+                .exchange()
+                .expectStatus().is3xxRedirection()
+                .expectHeader().valueEquals("Location", "/orders/%d?newOrder=true".formatted(orderId));
 
-        assertTrue((Boolean) flashMap.get("newOrder"));
-        assertEquals(orderId, order.getId());
-        assertEquals(18500, order.getTotal());
-        assertEquals(2, order.getItems().size());
+        OrderRsDto order = orderService.findById(orderId).block();
+        assertNotNull(order);
+        assertEquals(2L, order.getItems().size());
+        assertEquals(18500L, order.getTotal());
+        assertTrue(order.getItems().stream().map(OrderItemDto::getItemId).toList().containsAll(List.of(1L, 2L)));
     }
 
     @Test
     @DisplayName("Ошибка при оформлении покупки с пустой корзиной")
-    void shouldThrowCartEmptyExceptionsIfCartIsEmpty() throws Exception {
-        mockMvc.perform(post("/buy"))
-                .andExpect(status().is4xxClientError());
+    void shouldThrowCartEmptyExceptionsIfCartIsEmpty() {
 
-        assertThrows(CartEmptyException.class, () -> orderService.buyItemsInCart());
+        webClient.post()
+                .uri("/buy")
+                .exchange()
+                .expectStatus().is4xxClientError()
+                .expectBody(String.class)
+                .consumeWith(result -> {
+                    String body = result.getResponseBody();
+                    assertNotNull(body);
+                    assertTrue(body.contains("Невозможно оформить заказ: корзина пуста!"));
+                });
     }
 
     @Test
     @DisplayName("Показать все заказы, если их ещё не было")
-    void shouldShowOrdersIfOrdersIsEmpty() throws Exception {
+    void shouldShowOrdersIfOrdersIsEmpty() {
 
-        MvcResult mvcResult = mockMvc.perform(get("/orders"))
-                .andExpect(view().name("orders"))
-                .andExpect(status().isOk())
-                .andExpect(model().attributeExists("orders"))
-                .andReturn();
-
-        Map<String, Object> result = Objects.requireNonNull(Objects.requireNonNull(mvcResult.getModelAndView()).getModel());
-        @SuppressWarnings("unchecked")
-        List<Order> orders = (List<Order>) result.get("orders");
-
-        assertEquals(mvcResult.getModelAndView().getViewName(), "orders");
-        assertEquals(mvcResult.getModelAndView().getModel(), result);
-        assertNotNull(orders);
-        assertTrue(orders.isEmpty());
+        webClient.get()
+                .uri("/orders")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(String.class)
+                .consumeWith(result -> {
+                    String body = result.getResponseBody();
+                    assertNotNull(body);
+                    assertFalse(body.contains("Заказ №"));
+                });
     }
 
     @Test
-    @Sql(statements = {
-            "INSERT INTO orders(id, total, created_at) VALUES(1, 5000, '2025-09-14 21:56:39.047928')",
-            "INSERT INTO order_items(id, order_id, item_id, count) VALUES(1, 1, 1, 1)",
-            "INSERT INTO orders(id, total, created_at) VALUES(2, 10000, '2025-09-15 11:56:39.047928')",
-            "INSERT INTO order_items(id, order_id, item_id, count) VALUES(2, 2, 1, 2)"
-    })
     @DisplayName("Показать все заказы")
-    void shouldShowOrders() throws Exception {
+    void shouldShowOrders() {
 
-        MvcResult mvcResult = mockMvc.perform(get("/orders"))
-                .andExpect(view().name("orders"))
-                .andExpect(status().isOk())
-                .andExpect(model().attributeExists("orders"))
-                .andReturn();
+        insertIntoOrdersTable(databaseClient, List.of(
+                new Order().setId(1L).setTotal(5000L).setCreated(LocalDateTime.parse("2025-09-14T21:56:39.047928")),
+                new Order().setId(2L).setTotal(10000L).setCreated(LocalDateTime.parse("2025-09-14T21:56:39.047928"))
+        )).block();
 
-        @SuppressWarnings("unchecked")
-        List<Order> orders = (List<Order>) Objects.requireNonNull(mvcResult.getModelAndView()).getModel().get("orders");
+        insertIntoOrderItemsTable(databaseClient, List.of(
+                new OrderItem(1L, 1L, 1L, 1L),
+                new OrderItem(2L, 2L, 1L, 2L)
+        )).block();
 
+        webClient.get()
+                .uri("/orders")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(String.class)
+                .consumeWith(result -> {
+                    String body = result.getResponseBody();
+                    assertNotNull(body);
+                    assertTrue(body.contains("Заказ №1"));
+                    assertTrue(body.contains("Заказ №2"));
+                });
+
+        List<OrderRsDto> orders = orderService.findAll().collectList().block();
         assertNotNull(orders);
         assertEquals(2, orders.size());
-        var totals = orders.stream().map(Order::getTotal).toList();
+        var totals = orders.stream().map(OrderRsDto::getTotal).toList();
         assertTrue(totals.contains(5000L));
         assertTrue(totals.contains(10000L));
         assertTrue(orders.stream().noneMatch(o -> o.getItems().isEmpty()));
     }
 
     @Test
-    @Sql(statements = {
-            "INSERT INTO orders(id, total, created_at) VALUES(1, 5000, '2025-09-14 21:56:39.047928')",
-            "INSERT INTO order_items(id, order_id, item_id, count) VALUES(1, 1, 1, 1)"
-    })
     @DisplayName("Получение заказа по его ID")
-    void shouldFindOrderById() throws Exception {
-        long orderId = 1L;
+    void shouldFindOrderById() {
+        Long orderId = 1L;
 
-        MvcResult mvcResult = mockMvc.perform(get("/orders/%d".formatted(orderId)))
-                .andExpect(view().name("order"))
-                .andExpect(status().isOk())
-                .andExpect(model().attributeExists("order"))
-                .andReturn();
+        insertIntoOrdersTable(databaseClient, List.of(
+                new Order().setId(orderId).setTotal(5000L).setCreated(LocalDateTime.parse("2025-09-14T21:56:39.047928"))
+        )).block();
 
-        Order order = (Order) Objects.requireNonNull(Objects.requireNonNull(mvcResult.getModelAndView()).getModel().get("order"));
+        insertIntoOrderItemsTable(databaseClient, List.of(
+                new OrderItem(1L, 1L, 1L, 1L)
+        )).block();
 
+        webClient.get()
+                .uri("/orders/%d".formatted(orderId))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(String.class)
+                .consumeWith(result -> {
+                    String body = result.getResponseBody();
+                    assertNotNull(body);
+                    assertTrue(body.contains("Майка чёрная М"));
+                    assertTrue(body.contains("1 шт."));
+                    assertTrue(body.contains("5000 руб."));
+                });
+
+        OrderRsDto order = orderService.findById(orderId).block();
         assertNotNull(order);
-        assertEquals(orderId, order.getId());
-        assertEquals(order.getTotal(), 5000L);
-        assertEquals(1, order.getItems().size());
+        assertEquals(1L, order.getItems().size());
+        assertEquals(5000L, order.getTotal());
     }
 
     @Test
     @DisplayName("Выброс исключения, если заказ не найден")
-    void shouldThrowObjectNotFoundExceptionIfOrderNotExists() throws Exception {
+    void shouldThrowObjectNotFoundExceptionIfOrderNotExists() {
         long nonExistingOrderId = 1L;
 
-        mockMvc.perform(get("/orders/%d".formatted(nonExistingOrderId)))
-                .andExpect(status().is4xxClientError());
-
-        assertThrows(ObjectNotFoundException.class, () -> orderService.findById(nonExistingOrderId));
+        webClient.get()
+                .uri("/orders/%d".formatted(nonExistingOrderId))
+                .exchange()
+                .expectStatus().isNotFound()
+                .expectBody(String.class)
+                .consumeWith(result -> {
+                    String body = result.getResponseBody();
+                    assertNotNull(body);
+                    assertTrue(body.contains("Заказ с ID: 1 не найден!"));
+                });
     }
 }

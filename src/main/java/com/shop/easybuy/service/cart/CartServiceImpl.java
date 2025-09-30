@@ -4,13 +4,14 @@ import com.shop.easybuy.common.entity.ActionEnum;
 import com.shop.easybuy.entity.cart.CartItem;
 import com.shop.easybuy.entity.cart.CartViewDto;
 import com.shop.easybuy.entity.item.ItemRsDto;
-import com.shop.easybuy.repository.CartRepository;
-import com.shop.easybuy.repository.ItemRepository;
+import com.shop.easybuy.repository.cart.CartRepository;
+import com.shop.easybuy.repository.item.ItemRepository;
 import com.shop.easybuy.utils.Utils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import reactor.core.publisher.Mono;
 
 import java.util.List;
 
@@ -28,60 +29,73 @@ public class CartServiceImpl implements CartService {
 
     @Override
     @Transactional
-    public void changeQuantity(Long itemId, ActionEnum action) {
-        switch (action) {
-            case PLUS -> {
-                CartItem cartItem = cartRepository.findById(itemId).orElse(new CartItem(itemId, 0));
-                cartItem.setQuantity(cartItem.getQuantity() + 1);
-                cartRepository.save(cartItem);
-                logCart(itemId, cartItem.getQuantity());
-            }
-            case MINUS -> cartRepository.findById(itemId).ifPresent(cartItem -> {
-                var quantity = cartItem.getQuantity();
-                if (quantity > 0 && quantity != 1) {
-                    cartItem.setQuantity(quantity - 1);
-                    cartRepository.save(cartItem);
-                    logCart(itemId, cartItem.getQuantity());
-                } else {
-                    cartRepository.deleteById(itemId);
-                    logCart(itemId, 0);
-                }
-            });
-            case DELETE -> {
-                cartRepository.deleteById(itemId);
-                logCart(itemId, 0);
-            }
-        }
+    public Mono<Void> changeQuantity(Long itemId, ActionEnum action) {
+        return switch (action) {
+            case PLUS -> cartRepository.findCartItemByItemId(itemId)
+                    .defaultIfEmpty(new CartItem(itemId, 0))
+                    .flatMap(found -> {
+                        found.setQuantity(found.getQuantity() + 1);
+                        logCart(itemId, found.getQuantity());
+                        return cartRepository.addItemToCart(found);
+                    })
+                    .then();
+
+            case MINUS -> cartRepository.findCartItemByItemId(itemId)
+                    .switchIfEmpty(Mono.defer(() -> {
+                        log.warn("Товар с указанным ID {} не был найден. Действие {} пропущено.", itemId, action);
+                        return Mono.empty();
+                    }))
+                    .flatMap(found -> {
+                        var quantity = found.getQuantity();
+                        if (quantity > 1) {
+                            found.setQuantity(quantity - 1);
+                            logCart(itemId, found.getQuantity());
+                            return cartRepository.addItemToCart(found);
+                        } else {
+                            logCart(itemId, 0);
+                            return cartRepository.deleteCartItemByItemId(itemId);
+                        }
+                    })
+                    .then();
+
+            case DELETE -> cartRepository.deleteCartItemByItemId(itemId)
+                    .doOnSuccess(aVoid -> logCart(itemId, 0))
+                    .then();
+        };
     }
 
     private void logCart(Long itemId, Integer quantity) {
-        if (quantity > 0) log.info("В корзине обновлено количество товара с ID {}. Текущее количество: {}.", itemId, quantity);
+        if (quantity > 0)
+            log.info("В корзине обновлено количество товара с ID {}. Текущее количество: {}.", itemId, quantity);
         else log.info("Товар с ID {} был удалён из корзины.", itemId);
     }
 
     @Override
-    public CartViewDto getAllItems() {
+    public Mono<CartViewDto> getAllItems() {
 
-        var itemsInCart = itemRepository.findAllInCart();
-        var total = countTotal(itemsInCart);
-        var foundItems = Utils.splitList(itemsInCart, rowSize);
+        return itemRepository.findAllInCart()
+                .collectList()
+                .map(items -> {
+                    var total = countTotal(items);
+                    var foundItems = Utils.splitList(items, rowSize);
 
-        log.info("В корзине найдено {} товаров.", itemsInCart.size());
-
-        return new CartViewDto(foundItems, total);
+                    log.info("В корзине найдено {} товаров.", items.size());
+                    return new CartViewDto(foundItems, total);
+                });
     }
 
     @Override
     @Transactional
-    public void clearCart() {
-        cartRepository.clearCart();
-        log.info("Корзина была очищена.");
+    public Mono<Void> clearCart() {
+        return cartRepository.clearCart()
+                .doOnSuccess(clear -> log.info("Корзина была очищена."))
+                .then();
     }
 
     private Long countTotal(List<ItemRsDto> itemsInCart) {
         return itemsInCart
                 .stream()
-                .mapToLong(item -> item.getCount() * item.getPrice())
+                .mapToLong(item -> item.count() * item.price())
                 .sum();
     }
 }

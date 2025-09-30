@@ -1,15 +1,19 @@
 package com.shop.easybuy.controller.cart;
 
 import com.shop.easybuy.common.entity.ActionEnum;
-import com.shop.easybuy.entity.cart.CartViewDto;
 import com.shop.easybuy.service.cart.CartService;
-import jakarta.validation.constraints.NotNull;
+import com.shop.easybuy.utils.ValidationUtils;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.server.ServerWebExchange;
+import reactor.core.publisher.Mono;
 
 @Validated
 @Controller
@@ -20,22 +24,28 @@ public class CartController {
     private final CartService cartService;
 
     @GetMapping("/cart/items")
-    public String itemCartList(Model model) {
+    public Mono<String> itemCartList(Model model) {
 
-        CartViewDto cartView = cartService.getAllItems();
-
-        model.addAttribute("items", cartView.getFoundItems());
-        model.addAttribute("emptyList", cartView.getFoundItems().isEmpty());
-        model.addAttribute("total", cartView.getTotalCount());
-        return "cart";
+        return cartService.getAllItems()
+                .map(result -> {
+                    model.addAttribute("items", result.getFoundItems());
+                    model.addAttribute("emptyList", result.getFoundItems().isEmpty());
+                    model.addAttribute("total", result.getTotalCount());
+                    return "cart";
+                });
     }
 
     @PostMapping("/cart/items/{id}")
-    public String changeQuantity(@PathVariable("id")
-                                 @Positive(message = "ID товара должно быть положительным числом.") Long id,
-                                 @RequestParam @NotNull(message = "Изменение количества товара не может быть пустым.") ActionEnum action) {
+    public Mono<String> changeQuantity(@PathVariable("id")
+                                       @Positive(message = "ID товара должно быть положительным числом.") Long id,
+                                       ServerWebExchange exchange) {
 
-        cartService.changeQuantity(id, action);
-        return "redirect:/cart/items";
+        return exchange.getFormData()
+                .flatMap(formData -> {
+                    ActionEnum action = ValidationUtils.validateAction(formData.getFirst("action"));
+                    return cartService.changeQuantity(id, action)
+                            .then(Mono.just("redirect:/cart/items"));
+                });
+
     }
 }

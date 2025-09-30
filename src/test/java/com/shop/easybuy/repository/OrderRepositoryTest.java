@@ -1,86 +1,87 @@
 package com.shop.easybuy.repository;
 
-import com.shop.easybuy.annotation.JpaTestConfig;
-import com.shop.easybuy.common.exception.ObjectNotFoundException;
-import com.shop.easybuy.entity.item.Item;
 import com.shop.easybuy.entity.order.Order;
 import com.shop.easybuy.entity.order.OrderItem;
-import com.shop.easybuy.testDB.AbstractTestDatabase;
+import com.shop.easybuy.repository.order.OrderItemRepository;
+import com.shop.easybuy.repository.order.OrderRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.ActiveProfiles;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
-import java.time.LocalDateTime;
-import java.util.List;
+import java.util.ArrayList;
 
-import static com.shop.easybuy.DataCreator.createItem;
 import static com.shop.easybuy.DataCreator.createOrder;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@JpaTestConfig
-@ActiveProfiles("test")
-public class OrderRepositoryTest extends AbstractTestDatabase {
-
-    @Autowired
-    private ItemRepository itemRepository;
+public class OrderRepositoryTest extends AbstractRepositoryTest {
 
     @Autowired
     private OrderRepository orderRepository;
 
+    @Autowired
+    private OrderItemRepository orderItemRepository;
+
     @Test
-    @DisplayName("Проверка поиска заказа по ID")
+    @DisplayName("Поиск заказа по ID")
     void shouldFindOrderById() {
-        Item item1 = createItem();
-        Item item2 = createItem();
-
-        itemRepository.save(item1);
-        itemRepository.save(item2);
-
         Order order = createOrder();
-        List<OrderItem> orderedItems = List.of(new OrderItem(null, order, item1, 3), new OrderItem(null, order, item2, 2));
-        order.setItems(orderedItems);
-        order.setTotal(1000L);
-        order.setCreatedAt(LocalDateTime.of(2025, 1, 1, 12, 0));
 
-        orderRepository.save(order);
-
-        Order foundOrder = orderRepository.findOrderByOrderId(order.getId()).orElseThrow(() -> new ObjectNotFoundException("Заказ", order.getId()));
-
-        assertEquals(order.getId(), foundOrder.getId());
-        assertEquals(order.getCreatedAt(), foundOrder.getCreatedAt());
-        assertEquals(order.getTotal(), foundOrder.getTotal());
-        assertEquals(order.getItems(), foundOrder.getItems());
+        StepVerifier.create(orderRepository.save(order)
+                        .flatMap(savedOrder -> orderItemRepository.save(new OrderItem(null, 1L, 1L, 2L))
+                                .thenReturn(savedOrder))
+                        .flatMapMany(savedOrder -> orderRepository.findByOrderId(savedOrder.getId())))
+                .assertNext(found -> {
+                    assertThat(found).isNotNull();
+                    assertThat(found.orderId()).isEqualTo(order.getId());
+                    assertThat(found.orderTotal()).isEqualTo(order.getTotal());
+                    assertThat(found.itemId()).isEqualTo(1L);
+                    assertThat(found.orderItemCount()).isEqualTo(2);
+                })
+                .verifyComplete();
     }
 
     @Test
-    @DisplayName("Проверка поиска всех заказов")
+    @DisplayName("Поиск заказа по ID - заказ не найден")
+    void shouldNotFindOrderById() {
+
+        StepVerifier.create(orderRepository.findByOrderId(9999L))
+                .expectNextCount(0L)
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("Поиск всех заказов")
     void shouldFindAllOrders() {
-        Item item1 = createItem();
-        Item item2 = createItem();
-
-        itemRepository.save(item1);
-        itemRepository.save(item2);
-
         Order order1 = createOrder();
-        List<OrderItem> orderedItems1 = List.of(new OrderItem(null, order1, item1, 3));
-        order1.setItems(orderedItems1);
-        order1.setTotal(1000L);
-        order1.setCreatedAt(LocalDateTime.of(2025, 1, 1, 12, 0));
         Order order2 = createOrder();
-        List<OrderItem> orderedItems2 = List.of(new OrderItem(null, order2, item2, 3));
-        order2.setItems(orderedItems2);
-        order2.setTotal(100L);
-        order2.setCreatedAt(LocalDateTime.of(2025, 1, 2, 12, 0));
 
-        orderRepository.save(order1);
-        orderRepository.save(order2);
+        Mono<Void> setup = orderRepository.save(order1)
+                .then(orderRepository.save(order2))
+                .then(orderItemRepository.save(new OrderItem(null, 1L, 1L, 2L)))
+                .then(orderItemRepository.save(new OrderItem(null, 2L, 1L, 2L)))
+                .then();
 
-        List<Order> foundOrders = orderRepository.findAllOrders();
+        StepVerifier.create(setup.thenMany(orderRepository.findAllOrders()))
+                .recordWith(ArrayList::new)
+                .expectNextCount(2L)
+                .consumeRecordedWith(orders -> {
+                    assertThat(orders).isNotNull();
+                    assertThat(orders.size()).isEqualTo(2);
+                    assertTrue(orders.stream().anyMatch(orderFlatDto -> orderFlatDto.orderId().equals(order1.getId())));
+                    assertTrue(orders.stream().anyMatch(orderFlatDto -> orderFlatDto.orderId().equals(order2.getId())));
+                })
+                .verifyComplete();
+    }
 
-        assertEquals(2, foundOrders.size());
-        assertTrue(foundOrders.contains(order1));
-        assertTrue(foundOrders.contains(order2));
+    @Test
+    @DisplayName("Поиск всех заказов - заказы не найдены")
+    void shouldFindNoOrders() {
+
+        StepVerifier.create(orderRepository.findAllOrders())
+                .expectNextCount(0L)
+                .verifyComplete();
     }
 }

@@ -19,7 +19,7 @@
             <column name="total" type="bigint">
                 <constraints nullable="false"/>
             </column>
-            <column name="created_at" type="timestamp" defaultValueDate="CURRENT_TIMESTAMP">
+            <column name="created" type="timestamp" defaultValueDate="CURRENT_TIMESTAMP">
                 <constraints nullable="false"/>
             </column>
         </createTable>

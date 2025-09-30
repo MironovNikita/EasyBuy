@@ -1,40 +1,46 @@
 package com.shop.easybuy.controller;
 
-import com.shop.easybuy.service.item.ItemService;
+import com.shop.easybuy.repository.cart.CartRepository;
+import com.shop.easybuy.repository.item.ItemRepository;
 import com.shop.easybuy.service.order.OrderService;
-import com.shop.easybuy.testDB.AbstractTestDatabase;
+import com.shop.easybuy.testDB.AbstractTestDatabaseInitialization;
+import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.annotation.Rollback;
+import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.jdbc.Sql;
-import org.springframework.test.context.jdbc.SqlGroup;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.test.web.reactive.server.WebTestClient;
+import reactor.core.publisher.Flux;
+
+import java.util.Set;
 
 @SpringBootTest
-@AutoConfigureMockMvc
 @ActiveProfiles("test")
-@Transactional
-@Rollback
-@SqlGroup({
-        @Sql(
-                statements = {
-                        "TRUNCATE TABLE order_items RESTART IDENTITY CASCADE",
-                        "TRUNCATE TABLE orders RESTART IDENTITY CASCADE",
-                        "TRUNCATE TABLE cart RESTART IDENTITY CASCADE"
-                }, executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD
-        )
-})
-public abstract class BaseIntegrationTest extends AbstractTestDatabase {
+@AutoConfigureWebTestClient
+public abstract class BaseIntegrationTest extends AbstractTestDatabaseInitialization {
+
+    private static final Set<String> ALLOWED_TABLES = Set.of("cart", "order_items", "orders");
 
     @Autowired
-    protected MockMvc mockMvc;
+    protected WebTestClient webClient;
+
+    @Autowired
+    protected DatabaseClient databaseClient;
+
+    @BeforeEach
+    protected void cleanUp() {
+        Flux.fromIterable(ALLOWED_TABLES)
+                .flatMap(t -> databaseClient.sql("TRUNCATE TABLE " + t + " RESTART IDENTITY CASCADE").then())
+                .blockLast();
+    }
+
+    @Autowired
+    protected CartRepository cartRepository;
+
+    @Autowired
+    protected ItemRepository itemRepository;
 
     @Autowired
     protected OrderService orderService;
-
-    @Autowired
-    protected ItemService itemService;
 }

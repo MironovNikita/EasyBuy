@@ -2,19 +2,23 @@ package com.shop.easybuy.service.order;
 
 import com.shop.easybuy.common.exception.CartEmptyException;
 import com.shop.easybuy.common.exception.ObjectNotFoundException;
-import com.shop.easybuy.entity.order.Order;
-import com.shop.easybuy.entity.order.OrderItem;
-import com.shop.easybuy.mapper.ItemMapper;
-import com.shop.easybuy.repository.OrderRepository;
+import com.shop.easybuy.entity.item.ItemRsDto;
+import com.shop.easybuy.entity.order.*;
+import com.shop.easybuy.repository.order.OrderItemRepository;
+import com.shop.easybuy.repository.order.OrderRepository;
 import com.shop.easybuy.service.cart.CartService;
 import com.shop.easybuy.utils.Utils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -24,59 +28,140 @@ public class OrderServiceImpl implements OrderService {
 
     private final OrderRepository orderRepository;
 
-    private final ItemMapper itemMapper;
+    private final OrderItemRepository orderItemRepository;
 
     private final CartService cartService;
 
     @Override
     @Transactional
-    public Order buyItemsInCart() {
+    public Mono<OrderRsDto> buyItemsInCart() {
 
-        var foundInCart = cartService.getAllItems();
+        return cartService.getAllItems()
+                .flatMap(found -> {
+                    if (found.getFoundItems().isEmpty()) return Mono.error(() -> {
+                        log.error("Невозможно оформить заказ. Корзина пуста.");
+                        return new CartEmptyException();
+                    });
+                    var items = Utils.mergeList(found.getFoundItems());
 
-        if (foundInCart.getFoundItems().isEmpty()) {
-            log.error("Невозможно оформить заказ. Корзина пуста.");
-            throw new CartEmptyException();
-        }
+                    Order order = new Order();
+                    order.setTotal(found.getTotalCount());
+                    order.setCreated(LocalDateTime.now());
 
-        var items = Utils.mergeList(foundInCart.getFoundItems());
-        Order order = new Order();
+                    return orderRepository.save(order)
+                            .flatMap(savedOrder -> {
+                                List<OrderItem> orderedItems = items.stream()
+                                        .map(itemRsDto -> OrderItem.builder()
+                                                .orderId(savedOrder.getId())
+                                                .itemId(itemRsDto.id())
+                                                .count(itemRsDto.count())
+                                                .build())
+                                        .toList();
 
-        List<OrderItem> orderedItems = items.stream()
-                .map(itemRsDto -> OrderItem
-                        .builder()
-                        .item(itemMapper.toItem(itemRsDto))
-                        .order(order)
-                        .count(itemRsDto.getCount())
-                        .build())
-                .toList();
+                                return Flux.fromIterable(orderedItems)
+                                        .flatMap(orderItemRepository::save)
+                                        .collectList()
+                                        .map(savedItems -> {
+                                            List<OrderItemDto> itemDtos = savedItems.stream()
+                                                    .map(oi -> {
+                                                        ItemRsDto original = items.stream()
+                                                                .filter(i -> i.id().equals(oi.getItemId()))
+                                                                .findFirst()
+                                                                .orElseThrow(() -> {
+                                                                    log.error("Item c ID {} не найден при формировании заказа", oi.getItemId());
+                                                                    return new IllegalStateException("Item c ID %d не найден при формировании заказа"
+                                                                            .formatted(oi.getItemId()));
+                                                                });
 
-        order.setItems(orderedItems);
-        order.setTotal(foundInCart.getTotalCount());
-        order.setCreatedAt(LocalDateTime.now());
+                                                        return new OrderItemDto(
+                                                                oi.getId(),
+                                                                oi.getItemId(),
+                                                                original.title(),
+                                                                original.description(),
+                                                                original.image(),
+                                                                original.price(),
+                                                                oi.getCount()
+                                                        );
+                                                    }).toList();
 
-        Order savedOrder = orderRepository.save(order);
-        cartService.clearCart();
+                                            return new OrderRsDto(
+                                                    order.getId(),
+                                                    order.getTotal(),
+                                                    order.getCreated(),
+                                                    itemDtos
+                                            );
+                                        });
+                            });
 
-        log.info("Сформирован заказ с ID {} и количеством товаров {}.", savedOrder.getId(), savedOrder.getItems().size());
-
-        return savedOrder;
+                })
+                .flatMap(orderDto -> cartService.clearCart().thenReturn(orderDto))
+                .doOnSuccess(orderRsDto -> log.info("Сформирован заказ с ID {} и количеством товаров {}.", orderRsDto.getId(), orderRsDto.getItems().size()));
     }
 
     @Override
-    public Order findById(Long id) {
-        var foundOrder = orderRepository.findOrderByOrderId(id).orElseThrow(() -> {
-            log.error("");
-            return new ObjectNotFoundException("Заказ", id);
-        });
-        log.info("Найден заказ с ID {} и количеством товаров {}.", foundOrder.getId(), foundOrder.getItems().size());
-        return foundOrder;
+    public Mono<OrderRsDto> findById(Long id) {
+
+        return orderRepository.findByOrderId(id)
+                .collectList()
+                .flatMap(rows -> {
+                    if (rows.isEmpty()) {
+                        return Mono.error(new ObjectNotFoundException("Заказ", id));
+                    }
+
+                    var first = rows.getFirst();
+                    var items = rows.stream()
+                            .map(r -> new OrderItemDto(
+                                    r.orderItemId(),
+                                    r.itemId(),
+                                    r.itemTitle(),
+                                    r.itemDescription(),
+                                    r.itemImagePath(),
+                                    r.itemPrice(),
+                                    r.orderItemCount()
+                            )).toList();
+
+                    return Mono.just(new OrderRsDto(
+                            first.orderId(),
+                            first.orderTotal(),
+                            first.orderCreatedAt(),
+                            items
+                    )).doOnSuccess(foundOrder -> log.info("Найден заказ с ID {} и количеством товаров {}.", foundOrder.getId(), foundOrder.getItems().size()));
+                });
     }
 
     @Override
-    public List<Order> findAll() {
-        var foundOrders = orderRepository.findAllOrders();
-        log.info("Найдено {} заказов.", foundOrders.size());
-        return foundOrders;
+    public Flux<OrderRsDto> findAll() {
+
+        return orderRepository.findAllOrders()
+                .collectList()
+                .flatMapMany(rows -> {
+                    Map<Long, List<OrderFlatDto>> grouped = rows.stream()
+                            .collect(Collectors.groupingBy(OrderFlatDto::orderId));
+
+                    log.info("Найдено {} заказов.", grouped.size());
+
+                    return Flux.fromIterable(grouped.values())
+                            .map(orderRows -> {
+                                var first = orderRows.getFirst();
+                                var items = orderRows.stream()
+                                        .map(r -> new OrderItemDto(
+                                                r.orderItemId(),
+                                                r.itemId(),
+                                                r.itemTitle(),
+                                                r.itemDescription(),
+                                                r.itemImagePath(),
+                                                r.itemPrice(),
+                                                r.orderItemCount()
+                                        ))
+                                        .toList();
+
+                                return new OrderRsDto(
+                                        first.orderId(),
+                                        first.orderTotal(),
+                                        first.orderCreatedAt(),
+                                        items
+                                );
+                            });
+                });
     }
 }

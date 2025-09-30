@@ -15,7 +15,7 @@
 
         <createTable tableName="cart">
             <column name="item_id" type="bigint">
-                <constraints nullable="false" />
+                <constraints nullable="false" unique="true"/>
             </column>
             <column name="quantity" type="int">
                 <constraints nullable="false"/>

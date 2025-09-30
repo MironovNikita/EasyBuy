@@ -1,14 +1,14 @@
 package com.shop.easybuy.service.order;
 
-import com.shop.easybuy.entity.order.Order;
-
-import java.util.List;
+import com.shop.easybuy.entity.order.OrderRsDto;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public interface OrderService {
 
-    Order buyItemsInCart();
+    Mono<OrderRsDto> buyItemsInCart();
 
-    Order findById(Long id);
+    Mono<OrderRsDto> findById(Long id);
 
-    List<Order> findAll();
+    Flux<OrderRsDto> findAll();
 }

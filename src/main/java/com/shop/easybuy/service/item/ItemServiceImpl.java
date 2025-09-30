@@ -3,14 +3,17 @@ package com.shop.easybuy.service.item;
 import com.shop.easybuy.common.entity.PageResult;
 import com.shop.easybuy.common.exception.ObjectNotFoundException;
 import com.shop.easybuy.entity.item.ItemRsDto;
-import com.shop.easybuy.repository.ItemRepository;
+import com.shop.easybuy.repository.item.ItemRepository;
 import com.shop.easybuy.utils.Utils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.util.List;
 
@@ -25,25 +28,33 @@ public class ItemServiceImpl implements ItemService {
     private final ItemRepository itemRepository;
 
     @Override
-    public PageResult<ItemRsDto> getAllByParams(String search, Pageable pageable) {
+    public Mono<PageResult<ItemRsDto>> getAllByParams(String search, Pageable pageable) {
 
-        Page<ItemRsDto> page = itemRepository.findAllByTitleOrDescription(search, pageable);
-        List<List<ItemRsDto>> itemsToShow = Utils.splitList(page.getContent(), rowSize);
+        Flux<ItemRsDto> foundItems = itemRepository.findAllByTitleOrDescription(search, pageable.getPageSize(), pageable.getOffset(), pageable.getSort());
+        Mono<Long> total = itemRepository.countItemsBySearch(search);
 
-        log.info("По строке поиска \"{}\" было выведено {} товаров на главную страницу.", search, page.getTotalElements());
+        return foundItems
+                .collectList()
+                .zipWith(total)
+                .map(tuple -> {
+                    List<ItemRsDto> list = tuple.getT1();
+                    long totalCount = tuple.getT2();
 
-        return new PageResult<>(page, itemsToShow);
+                    List<List<ItemRsDto>> itemsToShow = Utils.splitList(list, rowSize);
+                    Page<ItemRsDto> page = new PageImpl<>(list, pageable, totalCount);
+                    log.info("По строке поиска \"{}\" было выведено {} товаров на главную страницу.", search, totalCount);
+                    return new PageResult<>(page, itemsToShow);
+                });
     }
 
     @Override
-    public ItemRsDto findItemById(Long id) {
+    public Mono<ItemRsDto> findItemById(Long id) {
 
-        var foundItem = itemRepository.findItemById(id).orElseThrow(() -> {
-            log.error("Товар с указанным ID {} не был найден.", id);
-            return new ObjectNotFoundException("Товар", id);
-        });
-        log.info("Запрошенный по ID {} товар \"{}\" был найден.", id, foundItem.getTitle());
-
-        return foundItem;
+        return itemRepository.findItemById(id)
+                .switchIfEmpty(Mono.defer(() -> {
+                    log.error("Товар с указанным ID {} не был найден.", id);
+                    return Mono.error(new ObjectNotFoundException("Товар", id));
+                }))
+                .doOnNext(item -> log.info("Запрошенный по ID {} товар \"{}\" был найден.", id, item.title()));
     }
 }

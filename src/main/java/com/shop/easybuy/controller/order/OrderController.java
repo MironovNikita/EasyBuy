@@ -1,19 +1,14 @@
 package com.shop.easybuy.controller.order;
 
-import com.shop.easybuy.entity.order.Order;
 import com.shop.easybuy.service.order.OrderService;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
-import java.util.List;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.util.UriComponentsBuilder;
+import reactor.core.publisher.Mono;
 
 @Validated
 @Controller
@@ -24,30 +19,37 @@ public class OrderController {
     private final OrderService orderService;
 
     @PostMapping("/buy")
-    public String buy(RedirectAttributes model) {
+    public Mono<String> buy() {
 
-        Order order = orderService.buyItemsInCart();
-        model.addAttribute("id", order.getId());
-        model.addFlashAttribute("newOrder", true);
-        model.addFlashAttribute("order", order);
-
-        return "redirect:/orders/{id}";
+        return orderService.buyItemsInCart()
+                .map(orderRsDto -> "redirect:" + UriComponentsBuilder.fromPath("/orders/{id}")
+                        .queryParam("newOrder", true)
+                        .buildAndExpand(orderRsDto.getId())
+                        .toUriString());
     }
 
     @GetMapping("/orders")
-    public String showOrders(Model model) {
-        List<Order> foundOrders = orderService.findAll();
-        model.addAttribute("orders", foundOrders);
-        return "orders";
+    public Mono<String> showOrders(Model model) {
+        return orderService.findAll()
+                .collectList()
+                .map(foundOrders -> {
+                    model.addAttribute("orders", foundOrders);
+                    return "orders";
+                });
     }
 
     @GetMapping("/orders/{id}")
-    public String showOrder(@PathVariable("id")
-                            @Positive(message = "ID товара должно быть положительным числом.") Long id,
-                            Model model) {
+    public Mono<String> showOrder(@PathVariable("id")
+                                  @Positive(message = "ID товара должно быть положительным числом.") Long id,
+                                  @RequestParam(name = "newOrder", required = false) Boolean newOrder,
+                                  Model model) {
+        return orderService.findById(id)
+                .map(orderRsDto -> {
+                    model.addAttribute("order", orderRsDto);
 
-        Order order = orderService.findById(id);
-        model.addAttribute("order", order);
-        return "order";
+                    if (Boolean.TRUE.equals(newOrder)) model.addAttribute("newOrder", newOrder);
+
+                    return "order";
+                });
     }
 }

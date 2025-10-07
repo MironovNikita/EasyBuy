@@ -2,6 +2,7 @@ plugins {
     id 'java'
     id 'org.springframework.boot'
     id 'io.spring.dependency-management'
+    id 'org.openapi.generator'
 }
 
 description = 'Internet Shop EasyBuy'
@@ -11,6 +12,8 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-r2dbc'
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
     implementation "org.springframework.boot:spring-boot-starter-validation"
+    implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${springDocVersion}"
+
     implementation 'org.postgresql:r2dbc-postgresql'
     implementation 'org.liquibase:liquibase-core'
     implementation 'org.postgresql:postgresql'
@@ -22,4 +25,33 @@ dependencies {
     testImplementation 'org.testcontainers:postgresql'
 
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+openApiGenerate {
+    generatorName.set("java")
+    library.set("webclient")
+    inputSpec.set("${project(":redis-service").projectDir}/src/main/resources/openapi/api-specification.yaml")
+    outputDir.set("$projectDir/build/generated")
+    apiPackage.set("com.shop.easybuy.client.api")
+    modelPackage.set("com.shop.easybuy.client.model")
+    invokerPackage.set("com.shop.easybuy.client.invoker")
+    configOptions.set([
+            useReactive : "true",
+            dateLibrary : "java8",
+            useJakartaEe: "true"
+    ])
+
+    sourceSets {
+        main {
+            java {
+                srcDir("$buildDir/generated/src/main/java")
+            }
+        }
+    }
+}
+
+afterEvaluate {
+    tasks.named('compileJava') {
+        dependsOn tasks.named('openApiGenerate')
+    }
 }

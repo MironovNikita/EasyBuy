@@ -1,5 +1,7 @@
 package com.shop.easybuy.service.cart;
 
+import com.shop.easybuy.client.api.PaymentApi;
+import com.shop.easybuy.client.model.BalanceRs;
 import com.shop.easybuy.common.entity.ActionEnum;
 import com.shop.easybuy.entity.cart.CartItem;
 import com.shop.easybuy.entity.cart.CartViewDto;
@@ -26,6 +28,8 @@ public class CartServiceImpl implements CartService {
     private final CartRepository cartRepository;
 
     private final ItemRepository itemRepository;
+
+    private final PaymentApi paymentApi;
 
     @Override
     @Transactional
@@ -75,12 +79,21 @@ public class CartServiceImpl implements CartService {
 
         return itemRepository.findAllInCart()
                 .collectList()
-                .map(items -> {
+                .flatMap(items -> {
                     var total = countTotal(items);
                     var foundItems = Utils.splitList(items, rowSize);
 
-                    log.info("В корзине найдено {} товаров.", items.size());
-                    return new CartViewDto(foundItems, total);
+                    return paymentApi.getBalance()
+                            .map(BalanceRs::getBalance)
+                            .map(currentBalance -> {
+                                boolean canPay = currentBalance >= total;
+                                log.info("В корзине найдено {} товаров.", items.size());
+                                return new CartViewDto(foundItems, total, canPay, true);
+                            })
+                            .onErrorResume(e -> {
+                                log.warn("Платёжный сервис недоступен: {}", e.getMessage());
+                                return Mono.just(new CartViewDto(foundItems, total, false, false));
+                            });
                 });
     }
 

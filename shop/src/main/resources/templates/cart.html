@@ -35,6 +35,25 @@
         .empty-button:hover {
             background-color: #c16200;
         }
+
+        .alert {
+            padding: 8px 12px;
+            border-radius: 6px;
+            margin: 6px 0;
+            font-weight: 500;
+        }
+
+        .alert-error {
+            background-color: #ffe5e5;
+            border: 1px solid #ffb3b3;
+            color: #a30000;
+        }
+
+        .alert-warning {
+            background-color: #fff5cc;
+            border: 1px solid #ffe680;
+            color: #7f6600;
+        }
     </style>
 </head>
 
@@ -101,9 +120,15 @@
     </tr>
     <tr>
         <td style="text-align:center">
-            <form th:action="@{/buy}" method="post" th:if="${!emptyList}">
+            <form th:action="@{/buy}" method="post" th:if="${!emptyList} and ${canPay} and ${paymentServiceAvailable}">
                 <button>Купить</button>
             </form>
+            <div th:if="${!paymentServiceAvailable}" class="alert alert-error">
+                Платёжный сервис временно недоступен. Попробуйте позднее.
+            </div>
+            <div th:if="${paymentServiceAvailable} and ${!canPay}" class="alert alert-warning">
+                Недостаточно средств для оформления заказа.
+            </div>
         </td>
     </tr>
 </table>

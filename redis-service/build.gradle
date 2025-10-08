@@ -18,7 +18,7 @@ dependencies {
 
 openApiGenerate {
     generatorName.set("spring")
-    inputSpec.set("$projectDir/src/main/resources/openapi/api-specification.yaml")
+    inputSpec.set(file("$projectDir/src/main/resources/openapi/api-specification.yaml").toURI().toString())
     outputDir.set("$projectDir/build/generated")
     apiPackage.set("com.shop.easybuy.api")
     modelPackage.set("com.shop.easybuy.model")

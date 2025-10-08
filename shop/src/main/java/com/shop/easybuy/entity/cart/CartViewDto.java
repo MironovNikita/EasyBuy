@@ -13,4 +13,8 @@ public class CartViewDto {
     private List<List<ItemRsDto>> foundItems;
 
     private Long totalCount;
+
+    private Boolean canPay;
+
+    private Boolean paymentServiceAvailable;
 }

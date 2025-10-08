@@ -30,7 +30,7 @@ dependencies {
 openApiGenerate {
     generatorName.set("java")
     library.set("webclient")
-    inputSpec.set("${project(":redis-service").projectDir}/src/main/resources/openapi/api-specification.yaml")
+    inputSpec.set(file("${project(":redis-service").projectDir}/src/main/resources/openapi/api-specification.yaml").toURI().toString())
     outputDir.set("$projectDir/build/generated")
     apiPackage.set("com.shop.easybuy.client.api")
     modelPackage.set("com.shop.easybuy.client.model")

@@ -31,6 +31,8 @@ public class CartController {
                     model.addAttribute("items", result.getFoundItems());
                     model.addAttribute("emptyList", result.getFoundItems().isEmpty());
                     model.addAttribute("total", result.getTotalCount());
+                    model.addAttribute("canPay", result.getCanPay());
+                    model.addAttribute("paymentServiceAvailable", result.getPaymentServiceAvailable());
                     return "cart";
                 });
     }

@@ -1,5 +1,6 @@
 package com.shop.easybuy.common.exception;
 
+import com.shop.easybuy.client.model.ErrorRs;
 import com.shop.easybuy.common.exception.dto.ApiError;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
@@ -10,6 +11,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.reactive.function.client.WebClientRequestException;
 import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Mono;
 
@@ -109,6 +111,37 @@ public class GlobalExceptionHandler {
         ApiError apiError = new ApiError(
                 e.getMessage(),
                 HttpStatus.BAD_REQUEST.value(),
+                getDateTime()
+        );
+        model.addAttribute(ERROR_ATTRIBUTE, apiError);
+        addRefererToModel(request, model);
+        return Mono.just(ERROR_VIEW);
+    }
+
+    @ExceptionHandler(PaymentFailedException.class)
+    @ResponseStatus(HttpStatus.PAYMENT_REQUIRED)
+    public Mono<String> handlePaymentFailedException(PaymentFailedException e, Model model, ServerHttpRequest request) {
+
+        ErrorRs errorRs = e.getError();
+        String errorMessage = (errorRs != null) ? errorRs.getErrorInfo() : "Произошла неизвестная ошибка совершения платежа.";
+        int errorCode = (errorRs != null) ? Integer.parseInt(errorRs.getErrorCode()) : HttpStatus.PAYMENT_REQUIRED.value();
+
+        ApiError apiError = new ApiError(
+                errorMessage,
+                errorCode,
+                getDateTime()
+        );
+        model.addAttribute(ERROR_ATTRIBUTE, apiError);
+        addRefererToModel(request, model);
+        return Mono.just(ERROR_VIEW);
+    }
+
+    @ExceptionHandler(WebClientRequestException.class)
+    @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
+    public Mono<String> handleWebClientRequestException(WebClientRequestException e, Model model, ServerHttpRequest request) {
+        ApiError apiError = new ApiError(
+                "Платёжный сервис временно недоступен: %s. Мы уже работаем над устранением проблемы.".formatted(e.getMessage()),
+                HttpStatus.SERVICE_UNAVAILABLE.value(),
                 getDateTime()
         );
         model.addAttribute(ERROR_ATTRIBUTE, apiError);

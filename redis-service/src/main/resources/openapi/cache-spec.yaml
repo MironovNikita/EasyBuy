@@ -1,0 +1,201 @@
+openapi: 3.1.0
+info:
+  title: Сервис кеширования товаров
+  description: Сервис, отвечающий за кеширование отдельных товаров и списков товаров
+  version: 1.0.0
+servers:
+  - url: http://localhost:8081
+paths:
+  /cache/item/{itemId}:
+    post:
+      summary: Добавить товар в кеш
+      operationId: cacheItem
+      parameters:
+        - name: itemId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: ID товара
+      tags:
+        - cache
+      requestBody:
+        required: true
+        description: Кешируемый товар
+        content:
+          application/json; charset=utf-8:
+            schema:
+              $ref: '#/components/schemas/CachedItem'
+      responses:
+        '201':
+          description: Статус сохранения
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/CacheSavedRs'
+        '400':
+          description: Ошибка сохранения товара в кеш
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: './payment-spec.yaml#/components/schemas/ErrorRs'
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: './payment-spec.yaml#/components/schemas/ErrorRs'
+
+    get:
+      summary: Получить товар по ID
+      operationId: getItemById
+      parameters:
+        - name: itemId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: ID товара
+      tags:
+        - cache
+      responses:
+        '200':
+          description: Товар найден
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/CachedItem'
+        '404':
+          description: Данные по товару в кеше не найдены
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: './payment-spec.yaml#/components/schemas/ErrorRs'
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: './payment-spec.yaml#/components/schemas/ErrorRs'
+  /cache/order/{orderId}/items:
+    post:
+      summary: Сохранить список товаров заказа в кеш
+      operationId: cacheOrderItems
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          description: ID заказа
+          schema:
+            type: integer
+            format: int64
+      tags:
+        - cache
+      requestBody:
+        required: true
+        content:
+          application/json; charset=utf-8:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/CachedItem'
+      responses:
+        '201':
+          description: Статус сохранения
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/CacheSavedRs'
+        '400':
+          description: Ошибка сохранения списка товаров в кеш
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: './payment-spec.yaml#/components/schemas/ErrorRs'
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: './payment-spec.yaml#/components/schemas/ErrorRs'
+
+    get:
+      summary: Получить список товаров из кеша по ID заказа
+      operationId: getItemsByOrderId
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          description: ID заказа
+          schema:
+            type: integer
+            format: int64
+      tags:
+        - cache
+      responses:
+        '200':
+          description: Товар найден
+          content:
+            application/json; charset=utf-8:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CachedItem'
+        '404':
+          description: Данные по товару в кеше не найдены
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: './payment-spec.yaml#/components/schemas/ErrorRs'
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: './payment-spec.yaml#/components/schemas/ErrorRs'
+
+components:
+  schemas:
+    CachedItem:
+      type: object
+      required:
+        - id
+        - title
+        - description
+        - image
+        - price
+      properties:
+        id:
+          description: ID товара
+          type: integer
+          format: int64
+          example: 1
+        title:
+          description: Название товара
+          type: string
+          example: Майка
+        description:
+          description: Описание товара
+          type: string
+          example: Чёрная
+        image:
+          description: Ресурс картинки
+          type: string
+          example: image1.png
+        price:
+          description: Цена товара
+          type: integer
+          format: int64
+          example: 5000
+    CacheSavedRs:
+      type: object
+      required:
+        - saved
+      properties:
+        saved:
+          description: Статус сохранения объекта в кеш
+          type: boolean
+          example: true
+

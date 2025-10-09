@@ -36,6 +36,7 @@ subprojects {
 
     dependencies {
         implementation 'org.openapitools:jackson-databind-nullable:0.2.6'
+        implementation 'org.apache.commons:commons-lang3:3.19.0'
 
         compileOnly 'org.projectlombok:lombok'
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"

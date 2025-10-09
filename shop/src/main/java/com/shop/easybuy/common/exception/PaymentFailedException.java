@@ -1,6 +1,6 @@
 package com.shop.easybuy.common.exception;
 
-import com.shop.easybuy.client.model.ErrorRs;
+import com.shop.easybuy.client.model.payment.ErrorRs;
 import lombok.Getter;
 
 @Getter

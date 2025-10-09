@@ -1,3 +1,5 @@
+import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
+
 plugins {
     id 'java'
     id 'org.springframework.boot'
@@ -12,7 +14,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-r2dbc'
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
     implementation "org.springframework.boot:spring-boot-starter-validation"
-    implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${springDocVersion}"
+    implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${springDocVersion}" exclude group: "org.apache.commons", module: "commons-lang3"
 
     implementation 'org.postgresql:r2dbc-postgresql'
     implementation 'org.liquibase:liquibase-core'
@@ -27,31 +29,50 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
-openApiGenerate {
+tasks.register("openApiGeneratePayment", GenerateTask) {
     generatorName.set("java")
     library.set("webclient")
-    inputSpec.set(file("${project(":redis-service").projectDir}/src/main/resources/openapi/api-specification.yaml").toURI().toString())
-    outputDir.set("$projectDir/build/generated")
-    apiPackage.set("com.shop.easybuy.client.api")
-    modelPackage.set("com.shop.easybuy.client.model")
-    invokerPackage.set("com.shop.easybuy.client.invoker")
+    inputSpec.set(file("${project(":redis-service").projectDir}/src/main/resources/openapi/payment-spec.yaml").toURI().toString())
+    outputDir.set("$projectDir/build/generated/payment")
+    apiPackage.set("com.shop.easybuy.client.api.payment")
+    modelPackage.set("com.shop.easybuy.client.model.payment")
+    invokerPackage.set("com.shop.easybuy.client.invoker.payment")
     configOptions.set([
-            useReactive : "true",
-            dateLibrary : "java8",
-            useJakartaEe: "true"
+            useReactive       : "true",
+            dateLibrary       : "java8",
+            useJakartaEe      : "true",
+            useSpringBoot3    : "true"
     ])
+}
 
-    sourceSets {
-        main {
-            java {
-                srcDir("$buildDir/generated/src/main/java")
-            }
+tasks.register("openApiGenerateCache", GenerateTask) {
+    generatorName.set("java")
+    library.set("webclient")
+    inputSpec.set(file("${project(":redis-service").projectDir}/src/main/resources/openapi/cache-spec.yaml").toURI().toString())
+    outputDir.set("$projectDir/build/generated/cache")
+    apiPackage.set("com.shop.easybuy.client.api.cache")
+    modelPackage.set("com.shop.easybuy.client.model.cache")
+    invokerPackage.set("com.shop.easybuy.client.invoker.cache")
+    configOptions.set([
+            useReactive       : "true",
+            dateLibrary       : "java8",
+            useJakartaEe      : "true",
+            useSpringBoot3    : "true"
+    ])
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir("$buildDir/generated/payment/src/main/java")
+            srcDir("$buildDir/generated/cache/src/main/java")
         }
     }
 }
 
 afterEvaluate {
     tasks.named('compileJava') {
-        dependsOn tasks.named('openApiGenerate')
+        dependsOn tasks.named('openApiGeneratePayment')
+        dependsOn tasks.named('openApiGenerateCache')
     }
 }

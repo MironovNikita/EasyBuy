@@ -1,10 +1,10 @@
 package com.shop.easybuy.service;
 
-import com.shop.easybuy.model.BalanceRs;
-import com.shop.easybuy.model.PaymentRq;
+import com.shop.easybuy.model.payment.BalanceRs;
+import com.shop.easybuy.model.payment.PaymentRq;
 import reactor.core.publisher.Mono;
 
-public interface RedisService {
+public interface PaymentService {
 
     Mono<BalanceRs> getBalance();
 

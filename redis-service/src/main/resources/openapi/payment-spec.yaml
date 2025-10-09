@@ -79,7 +79,8 @@ components:
       properties:
         amount:
           description: Сумма платежа
-          type: long
+          type: integer
+          format: int64
           example: 5000
     BalanceRs:
       required:
@@ -88,7 +89,8 @@ components:
       properties:
         balance:
           description: Текущий баланс
-          type: long
+          type: integer
+          format: int64
           example: 10000
     StatusRs:
       required:

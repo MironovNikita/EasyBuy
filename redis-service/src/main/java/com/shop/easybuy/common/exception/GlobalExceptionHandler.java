@@ -1,6 +1,6 @@
 package com.shop.easybuy.common.exception;
 
-import com.shop.easybuy.model.ErrorRs;
+import com.shop.easybuy.model.payment.ErrorRs;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,28 +14,29 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(DataNotFoundException.class)
     public Mono<ResponseEntity<ErrorRs>> handleDataNotFoundException(DataNotFoundException e) {
-        ErrorRs errorRs = new ErrorRs();
-        errorRs.setErrorInfo(e.getMessage());
-        errorRs.setErrorCode(String.valueOf(HttpStatus.NOT_FOUND.value()));
-
-        return Mono.just(ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorRs));
+        return buildErrorRs(e, HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
     public Mono<ResponseEntity<ErrorRs>> handleException(IllegalArgumentException e) {
-        ErrorRs errorRs = new ErrorRs();
-        errorRs.setErrorInfo(e.getMessage());
-        errorRs.setErrorCode(String.valueOf(HttpStatus.PAYMENT_REQUIRED.value()));
+        return buildErrorRs(e, HttpStatus.PAYMENT_REQUIRED);
+    }
 
-        return Mono.just(ResponseEntity.status(HttpStatus.PAYMENT_REQUIRED).body(errorRs));
+    @ExceptionHandler(DeserializationException.class)
+    public Mono<ResponseEntity<ErrorRs>> handleDeserializationException(DeserializationException e) {
+        return buildErrorRs(e, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @ExceptionHandler(Exception.class)
     public Mono<ResponseEntity<ErrorRs>> handleException(Exception e) {
-        ErrorRs errorRs = new ErrorRs();
-        errorRs.setErrorInfo(e.getMessage());
-        errorRs.setErrorCode(String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()));
+        return buildErrorRs(e, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
 
-        return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorRs));
+    private Mono<ResponseEntity<ErrorRs>> buildErrorRs(Throwable throwable, HttpStatus status) {
+        ErrorRs errorRs = new ErrorRs();
+        errorRs.setErrorInfo(throwable.getMessage());
+        errorRs.setErrorCode(String.valueOf(status.value()));
+
+        return Mono.just(ResponseEntity.status(status).body(errorRs));
     }
 }

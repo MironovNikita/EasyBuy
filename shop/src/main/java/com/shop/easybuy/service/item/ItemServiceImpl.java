@@ -1,5 +1,6 @@
 package com.shop.easybuy.service.item;
 
+import com.shop.easybuy.client.api.cache.CacheApi;
 import com.shop.easybuy.common.entity.PageResult;
 import com.shop.easybuy.common.exception.ObjectNotFoundException;
 import com.shop.easybuy.entity.item.ItemRsDto;
@@ -26,6 +27,8 @@ public class ItemServiceImpl implements ItemService {
     private static final int rowSize = 5;
 
     private final ItemRepository itemRepository;
+
+    private final CacheApi cacheApi;
 
     @Override
     public Mono<PageResult<ItemRsDto>> getAllByParams(String search, Pageable pageable) {

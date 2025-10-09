@@ -1,7 +1,7 @@
 package com.shop.easybuy.service.cart;
 
-import com.shop.easybuy.client.api.PaymentApi;
-import com.shop.easybuy.client.model.BalanceRs;
+import com.shop.easybuy.client.api.payment.PaymentApi;
+import com.shop.easybuy.client.model.payment.BalanceRs;
 import com.shop.easybuy.common.entity.ActionEnum;
 import com.shop.easybuy.entity.cart.CartItem;
 import com.shop.easybuy.entity.cart.CartViewDto;

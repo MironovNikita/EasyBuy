@@ -7,7 +7,8 @@ import reactor.core.publisher.Mono;
 
 @Repository
 @RequiredArgsConstructor
-public class RedisRepository {
+public class PaymentRepository {
+    //TODO Добавить интерфейс
 
     private final ReactiveStringRedisTemplate redisTemplate;
 

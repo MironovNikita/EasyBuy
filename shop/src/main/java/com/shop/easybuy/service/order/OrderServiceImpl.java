@@ -2,10 +2,10 @@ package com.shop.easybuy.service.order;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.shop.easybuy.client.api.PaymentApi;
-import com.shop.easybuy.client.model.BalanceRs;
-import com.shop.easybuy.client.model.ErrorRs;
-import com.shop.easybuy.client.model.PaymentRq;
+import com.shop.easybuy.client.api.payment.PaymentApi;
+import com.shop.easybuy.client.model.payment.BalanceRs;
+import com.shop.easybuy.client.model.payment.ErrorRs;
+import com.shop.easybuy.client.model.payment.PaymentRq;
 import com.shop.easybuy.common.exception.CartEmptyException;
 import com.shop.easybuy.common.exception.ObjectNotFoundException;
 import com.shop.easybuy.common.exception.PaymentFailedException;

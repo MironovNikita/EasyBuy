@@ -11,6 +11,7 @@ import com.shop.easybuy.repository.item.ItemRepository;
 import com.shop.easybuy.utils.Utils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Mono;
@@ -23,7 +24,8 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class CartServiceImpl implements CartService {
 
-    private static final int rowSize = 5;
+    @Value("${items.row.size}")
+    private int rowSize;
 
     private final CartRepository cartRepository;
 

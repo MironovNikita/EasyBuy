@@ -13,4 +13,11 @@ public interface CartRepository extends R2dbcRepository<CartItem, Long>, CartRep
     Mono<CartItem> findCartItemByItemId(Long itemId);
 
     Mono<Void> deleteCartItemByItemId(Long itemId);
+
+    @Query("""
+            SELECT c.quantity
+            FROM cart c
+            WHERE c.item_id = :id
+            """)
+    Mono<Integer> findItemQuantityInCartByItemId(Long itemId);
 }

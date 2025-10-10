@@ -3,12 +3,17 @@ package com.shop.easybuy.controller;
 import com.shop.easybuy.api.cache.CacheApi;
 import com.shop.easybuy.model.cache.CacheSavedRs;
 import com.shop.easybuy.model.cache.CachedItem;
+import com.shop.easybuy.model.cache.SortEnum;
 import com.shop.easybuy.service.CacheService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Flux;
@@ -44,21 +49,29 @@ public class CacheController implements CacheApi {
     }
 
     @Override
-    public Mono<ResponseEntity<CacheSavedRs>> cacheOrderItems(
-            @PathVariable("orderId") Long orderId,
-            @Valid @RequestBody Flux<CachedItem> cachedItems,
+    public Mono<ResponseEntity<CacheSavedRs>> cacheMainItems(
+            @Valid @RequestBody Flux<CachedItem> cachedItem,
+            @Size(max = 20) @Valid @RequestParam(value = "search", required = false, defaultValue = "") String search,
+            @Valid @RequestParam(value = "sort", required = false, defaultValue = "NO") SortEnum sort,
+            @Min(1) @Max(100) @Valid @RequestParam(value = "pageSize", required = false, defaultValue = "10") Integer pageSize,
+            @Min(0) @Valid @RequestParam(value = "pageNumber", required = false, defaultValue = "0") Integer pageNumber,
             ServerWebExchange exchange
     ) {
-        return cachedItems
-                .collectList()
-                .flatMap(list -> cacheService.cacheOrderItems(list, orderId))
+        return cacheService
+                .cacheMainItems(cachedItem, search, sort, pageSize, pageNumber)
                 .map(ResponseEntity::ok);
     }
 
-    public Mono<ResponseEntity<Flux<CachedItem>>> getItemsByOrderId(
-            @PathVariable("orderId") Long orderId,
+    public Mono<ResponseEntity<Flux<CachedItem>>> getMainItemsByParams(
+            @Size(max = 20) @Valid @RequestParam(value = "search", required = false, defaultValue = "") String search,
+            @Valid @RequestParam(value = "sort", required = false, defaultValue = "NO") SortEnum sort,
+            @Min(1) @Max(100) @Valid @RequestParam(value = "pageSize", required = false, defaultValue = "10") Integer pageSize,
+            @Min(0) @Valid @RequestParam(value = "pageNumber", required = false, defaultValue = "0") Integer pageNumber,
             ServerWebExchange exchange
     ) {
-        return Mono.just(ResponseEntity.ok(cacheService.getItemsByOrderId(orderId)));
+        return Mono.just(
+                ResponseEntity.ok(
+                        cacheService
+                                .getMainItemsByParams(search, sort, pageSize, pageNumber)));
     }
 }

@@ -54,10 +54,10 @@ tasks.register("openApiGenerateCache", GenerateTask) {
     modelPackage.set("com.shop.easybuy.client.model.cache")
     invokerPackage.set("com.shop.easybuy.client.invoker.cache")
     configOptions.set([
-            useReactive       : "true",
-            dateLibrary       : "java8",
-            useJakartaEe      : "true",
-            useSpringBoot3    : "true"
+            useReactive   : "true",
+            dateLibrary   : "java8",
+            useJakartaEe  : "true",
+            useSpringBoot3: "true"
     ])
 }
 

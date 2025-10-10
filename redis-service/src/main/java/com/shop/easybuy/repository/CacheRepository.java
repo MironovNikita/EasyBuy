@@ -2,7 +2,6 @@ package com.shop.easybuy.repository;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.shop.easybuy.common.exception.DataNotFoundException;
 import com.shop.easybuy.common.exception.DeserializationException;
 import com.shop.easybuy.model.cache.CacheSavedRs;
 import com.shop.easybuy.model.cache.CachedItem;
@@ -13,6 +12,7 @@ import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.Duration;
 import java.util.List;
 
 //TODO Добавить интерфейс
@@ -23,14 +23,15 @@ public class CacheRepository {
 
     private final ReactiveRedisTemplate<String, Object> redisTemplate; //TODO Заменить Object на свою сущность после генерации API
     private final ObjectMapper objectMapper;
+    private final Duration cacheLiveTime;
+
     private static final String ITEM_KEY_PREFIX = "item:";
-    private static final String ORDER_ITEMS_LIST_KEY_PREFIX = "items:order:";
 
     public Mono<CacheSavedRs> cacheItem(CachedItem item) {
         String key = ITEM_KEY_PREFIX + item.getId();
         return redisTemplate
                 .opsForValue()
-                .set(key, item)
+                .set(key, item, cacheLiveTime)
                 .map(CacheSavedRs::new)
                 .onErrorResume(error -> {
                     log.error("Ошибка при кешировании товара с ID {}: {}", item.getId(), error.getMessage());
@@ -44,7 +45,7 @@ public class CacheRepository {
                 .opsForValue()
                 .get(key)
                 .flatMap(object -> {
-                    if (object == null) return Mono.error(new DataNotFoundException(key));
+                    if (object == null) return Mono.empty();
                     try {
                         CachedItem item = objectMapper.convertValue(object, CachedItem.class);
                         return Mono.just(item);
@@ -53,28 +54,30 @@ public class CacheRepository {
                         return Mono.error(new DeserializationException("CachedItem"));
                     }
                 })
-                .switchIfEmpty(Mono.error(new DataNotFoundException(key)));
+                .switchIfEmpty(Mono.empty());
     }
 
-    public Mono<CacheSavedRs> cacheOrderItems(List<CachedItem> items, Long orderId) {
-        String key = ORDER_ITEMS_LIST_KEY_PREFIX + orderId;
-        return redisTemplate
-                .opsForValue()
-                .set(key, items)
-                .map(CacheSavedRs::new)
-                .onErrorResume(error -> {
-                    log.error("Ошибка при кешировании товаров заказа с ID {}: {}", orderId, error.getMessage());
-                    return Mono.just(new CacheSavedRs(false));
-                });
+    public Mono<CacheSavedRs> cacheMainItems(Flux<CachedItem> items, String key) {
+
+        return items
+                .collectList()
+                .flatMap(itemList -> redisTemplate
+                        .opsForValue()
+                        .set(key, itemList, cacheLiveTime)
+                        .map(CacheSavedRs::new)
+                        .onErrorResume(error -> {
+                            log.error("Ошибка при кешировании товаров по ключу: {}. Текст ошибки: {}", key, error.getMessage());
+                            return Mono.just(new CacheSavedRs(false));
+                        })
+                );
     }
 
-    public Flux<CachedItem> getItemsByOrderId(Long orderId) {
-        String key = ORDER_ITEMS_LIST_KEY_PREFIX + orderId;
+    public Flux<CachedItem> getMainItemsByKey(String key) {
         return redisTemplate
                 .opsForValue()
                 .get(key)
                 .flatMapMany(object -> {
-                    if (object == null) return Flux.error(new DataNotFoundException(key));
+                    if (object == null) return Flux.empty();
 
                     try {
                         List<CachedItem> items = objectMapper.convertValue(object, new TypeReference<>() {
@@ -84,6 +87,7 @@ public class CacheRepository {
                         log.error("Ошибка при десериализации списка CachedItem: {}", e.getMessage());
                         return Flux.error(new DeserializationException("Список CachedItem"));
                     }
-                });
+                })
+                .switchIfEmpty(Flux.empty());
     }
 }

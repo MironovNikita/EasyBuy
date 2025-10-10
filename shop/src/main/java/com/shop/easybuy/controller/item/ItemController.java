@@ -36,14 +36,14 @@ public class ItemController {
     public Mono<String> mainPage(
             @RequestParam(value = "search", required = false, defaultValue = "")
             @Size(max = 20, message = "Количество символов в строке поиска не должно превышать 20.") String search,
-            @RequestParam(value = "sort", required = false, defaultValue = "NO") SortEnum sort,
+            @RequestParam(value = "sort", required = false, defaultValue = "NONE") SortEnum sort,
             @RequestParam(value = "pageSize", required = false, defaultValue = "10") int pageSize,
             @RequestParam(value = "pageNumber", required = false, defaultValue = "0") int pageNumber,
             Model model) {
 
         PageRequest pageRequest = PageRequest.of(pageNumber, pageSize, sort.getSort());
 
-        return itemService.getAllByParams(search, pageRequest)
+        return itemService.getAllByParams(search, pageRequest, sort)
                 .map(result -> {
                     model.addAttribute("items", result.foundItems());
                     model.addAttribute("search", search);

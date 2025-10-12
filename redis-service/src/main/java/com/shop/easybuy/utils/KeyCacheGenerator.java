@@ -14,7 +14,7 @@ public class KeyCacheGenerator {
                                      Integer pageNumber) {
         String key = String.format("main:%s:%s:%d:%d",
                 search == null ? "" : search.trim().toLowerCase(),
-                sort == null ? "NO" : sort,
+                sort == null ? "NONE" : sort,
                 pageSize,
                 pageNumber
         );

@@ -26,7 +26,7 @@
                 <p>
                     <label for="sort">Сортировка: </label>
                     <select id="sort" name="sort" onchange="this.form.submit()">
-                        <option value="NO" th:selected="${sort=='NO'}">Нет</option>
+                        <option value="NONE" th:selected="${sort=='NONE'}">Нет</option>
                         <option value="ALPHA" th:selected="${sort=='ALPHA'}">По алфавиту</option>
                         <option value="PRICE_ASC" th:selected="${sort=='PRICE_ASC'}">По возрастанию цены</option>
                         <option value="PRICE_DESC" th:selected="${sort=='PRICE_DESC'}">По убыванию цены</option>

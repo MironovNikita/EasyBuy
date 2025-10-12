@@ -37,6 +37,8 @@ public class GlobalExceptionHandler {
         errorRs.setErrorInfo(throwable.getMessage());
         errorRs.setErrorCode(String.valueOf(status.value()));
 
+        log.error("Возникла ошибка: {}. Статус ответа: {}", throwable.getMessage(), status.value());
+
         return Mono.just(ResponseEntity.status(status).body(errorRs));
     }
 }

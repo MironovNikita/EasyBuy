@@ -1,4 +1,4 @@
-package com.shop.easybuy.service;
+package com.shop.easybuy.service.payment;
 
 import com.shop.easybuy.model.payment.BalanceRs;
 import com.shop.easybuy.model.payment.PaymentRq;

@@ -1,9 +1,9 @@
-package com.shop.easybuy.service;
+package com.shop.easybuy.service.cache;
 
 import com.shop.easybuy.model.cache.CacheSavedRs;
 import com.shop.easybuy.model.cache.CachedItem;
 import com.shop.easybuy.model.cache.SortEnum;
-import com.shop.easybuy.repository.CacheRepository;
+import com.shop.easybuy.repository.cache.CacheRepository;
 import com.shop.easybuy.utils.KeyCacheGenerator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -11,20 +11,21 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-//TODO Добавить интерфейс
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class CacheService {
+public class CacheServiceImpl implements CacheService {
 
     private final CacheRepository cacheRepository;
 
+    @Override
     public Mono<CacheSavedRs> cacheItem(CachedItem item) {
         return cacheRepository
                 .cacheItem(item)
                 .doOnSuccess(status -> log.info("Товар с ID {} успешно кеширован. Статус: {}", item.getId(), status.getSaved()));
     }
 
+    @Override
     public Mono<CachedItem> getItemById(Long itemId) {
         return cacheRepository
                 .getItemById(itemId)
@@ -34,6 +35,7 @@ public class CacheService {
                 });
     }
 
+    @Override
     public Mono<CacheSavedRs> cacheMainItems(Flux<CachedItem> items,
                                              String search,
                                              SortEnum sort,
@@ -46,6 +48,7 @@ public class CacheService {
                         search, sort, pageSize, pageNumber));
     }
 
+    @Override
     public Flux<CachedItem> getMainItemsByParams(String search,
                                                  SortEnum sort,
                                                  Integer pageSize,

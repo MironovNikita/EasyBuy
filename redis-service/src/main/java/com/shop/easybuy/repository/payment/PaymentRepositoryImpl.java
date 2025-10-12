@@ -1,4 +1,4 @@
-package com.shop.easybuy.repository;
+package com.shop.easybuy.repository.payment;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
@@ -7,13 +7,13 @@ import reactor.core.publisher.Mono;
 
 @Repository
 @RequiredArgsConstructor
-public class PaymentRepository {
-    //TODO Добавить интерфейс
+public class PaymentRepositoryImpl implements PaymentRepository {
 
     private final ReactiveStringRedisTemplate redisTemplate;
 
     private static final String BALANCE_KEY = "balance";
 
+    @Override
     public Mono<Long> getBalance() {
         return redisTemplate
                 .opsForValue()
@@ -21,6 +21,7 @@ public class PaymentRepository {
                 .map(Long::parseLong);
     }
 
+    @Override
     public Mono<Long> decrementBalance(long amount) {
         return redisTemplate
                 .opsForValue()

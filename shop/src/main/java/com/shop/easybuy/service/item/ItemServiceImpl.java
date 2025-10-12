@@ -56,36 +56,13 @@ public class ItemServiceImpl implements ItemService {
                                 .collectList()
                                 .map(list -> buildPageResult(list, pageable, list.size()));
                     } else {
-                        log.info("Данные по параметрам (search: {}, sort: {}, pageSize: {}, pageNumber: {}) не найдены в кеше.",
+                        log.info("Данные по параметрам (search: \"{}\", sort: {}, pageSize: {}, pageNumber: {}) не найдены в кеше.",
                                 search, sortEnum, pageSize, pageNumber);
 
                         Flux<ItemRsDto> foundItems = itemRepository.findAllByTitleOrDescription(search, pageSize, pageable.getOffset(), pageable.getSort());
                         Mono<Long> total = itemRepository.countItemsBySearch(search);
 
-                        return foundItems
-                                .collectList()
-                                .zipWith(total)
-                                .flatMap(tuple -> {
-                                    List<ItemRsDto> items = tuple.getT1();
-                                    long totalCount = tuple.getT2();
-
-                                    List<CachedItem> cached = items.stream()
-                                            .map(itemMapper::toCachedItemMono)
-                                            .toList();
-
-                                    return cacheApi.cacheMainItems(cached, search, sortEnum, pageSize, pageNumber)
-                                            .doOnNext(cacheSavedRs -> {
-                                                if (Boolean.TRUE.equals(cacheSavedRs.getSaved()))
-                                                    log.info("Товары на главной странице ({} шт.) сохранены в кеш.", items.size());
-                                                else
-                                                    log.warn("Товары на главной странице ({} шт.) не были сохранены в кеш.", items.size());
-                                            })
-                                            .onErrorResume(e -> {
-                                                log.warn("Ошибка при сохранении страницы с товарами в кеш: {}", e.getMessage());
-                                                return Mono.empty();
-                                            })
-                                            .thenReturn(buildPageResult(items, pageable, totalCount));
-                                });
+                        return getPageResultAndSaveCache(foundItems, total, search, sortEnum, pageSize, pageNumber, pageable);
                     }
                 })
                 .onErrorResume(ex -> {
@@ -105,6 +82,39 @@ public class ItemServiceImpl implements ItemService {
         List<List<ItemRsDto>> itemsToShow = Utils.splitList(list, rowSize);
         Page<ItemRsDto> page = new PageImpl<>(list, pageable, totalCount);
         return new PageResult<>(page, itemsToShow);
+    }
+
+    private Mono<PageResult<ItemRsDto>> getPageResultAndSaveCache(
+            Flux<ItemRsDto> foundItems,
+            Mono<Long> total, String search,
+            com.shop.easybuy.client.model.cache.SortEnum sortEnum,
+            int pageSize,
+            int pageNumber,
+            Pageable pageable) {
+        return foundItems
+                .collectList()
+                .zipWith(total)
+                .flatMap(tuple -> {
+                    List<ItemRsDto> items = tuple.getT1();
+                    long totalCount = tuple.getT2();
+
+                    List<CachedItem> cached = items.stream()
+                            .map(itemMapper::toCachedItemMono)
+                            .toList();
+
+                    return cacheApi.cacheMainItems(cached, search, sortEnum, pageSize, pageNumber)
+                            .doOnNext(cacheSavedRs -> {
+                                if (Boolean.TRUE.equals(cacheSavedRs.getSaved()))
+                                    log.info("Товары на главной странице ({} шт.) сохранены в кеш.", items.size());
+                                else
+                                    log.warn("Товары на главной странице ({} шт.) не были сохранены в кеш.", items.size());
+                            })
+                            .onErrorResume(e -> {
+                                log.warn("Ошибка при сохранении страницы с товарами в кеш: {}", e.getMessage());
+                                return Mono.empty();
+                            })
+                            .thenReturn(buildPageResult(items, pageable, totalCount));
+                });
     }
 
     @Override

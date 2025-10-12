@@ -1,10 +1,10 @@
-package com.shop.easybuy.controller;
+package com.shop.easybuy.controller.cache;
 
 import com.shop.easybuy.api.cache.CacheApi;
 import com.shop.easybuy.model.cache.CacheSavedRs;
 import com.shop.easybuy.model.cache.CachedItem;
 import com.shop.easybuy.model.cache.SortEnum;
-import com.shop.easybuy.service.CacheService;
+import com.shop.easybuy.service.cache.CacheServiceImpl;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -19,13 +19,11 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-//TODO Разнести контроллеры по пакетам
 @RestController
 @RequiredArgsConstructor
 public class CacheController implements CacheApi {
 
-    //TODO Интерфейс!!!
-    private final CacheService cacheService;
+    private final CacheServiceImpl cacheService;
 
     @Override
     public Mono<ResponseEntity<CacheSavedRs>> cacheItem(
@@ -52,7 +50,7 @@ public class CacheController implements CacheApi {
     public Mono<ResponseEntity<CacheSavedRs>> cacheMainItems(
             @Valid @RequestBody Flux<CachedItem> cachedItem,
             @Size(max = 20) @Valid @RequestParam(value = "search", required = false, defaultValue = "") String search,
-            @Valid @RequestParam(value = "sort", required = false, defaultValue = "NO") SortEnum sort,
+            @Valid @RequestParam(value = "sort", required = false, defaultValue = "NONE") SortEnum sort,
             @Min(1) @Max(100) @Valid @RequestParam(value = "pageSize", required = false, defaultValue = "10") Integer pageSize,
             @Min(0) @Valid @RequestParam(value = "pageNumber", required = false, defaultValue = "0") Integer pageNumber,
             ServerWebExchange exchange
@@ -64,7 +62,7 @@ public class CacheController implements CacheApi {
 
     public Mono<ResponseEntity<Flux<CachedItem>>> getMainItemsByParams(
             @Size(max = 20) @Valid @RequestParam(value = "search", required = false, defaultValue = "") String search,
-            @Valid @RequestParam(value = "sort", required = false, defaultValue = "NO") SortEnum sort,
+            @Valid @RequestParam(value = "sort", required = false, defaultValue = "NONE") SortEnum sort,
             @Min(1) @Max(100) @Valid @RequestParam(value = "pageSize", required = false, defaultValue = "10") Integer pageSize,
             @Min(0) @Valid @RequestParam(value = "pageNumber", required = false, defaultValue = "0") Integer pageNumber,
             ServerWebExchange exchange

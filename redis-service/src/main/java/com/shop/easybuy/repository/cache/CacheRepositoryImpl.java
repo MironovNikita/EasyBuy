@@ -1,4 +1,4 @@
-package com.shop.easybuy.repository;
+package com.shop.easybuy.repository.cache;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -15,18 +15,18 @@ import reactor.core.publisher.Mono;
 import java.time.Duration;
 import java.util.List;
 
-//TODO Добавить интерфейс
 @Slf4j
 @Repository
 @RequiredArgsConstructor
-public class CacheRepository {
+public class CacheRepositoryImpl implements CacheRepository {
 
-    private final ReactiveRedisTemplate<String, Object> redisTemplate; //TODO Заменить Object на свою сущность после генерации API
+    private final ReactiveRedisTemplate<String, Object> redisTemplate;
     private final ObjectMapper objectMapper;
     private final Duration cacheLiveTime;
 
     private static final String ITEM_KEY_PREFIX = "item:";
 
+    @Override
     public Mono<CacheSavedRs> cacheItem(CachedItem item) {
         String key = ITEM_KEY_PREFIX + item.getId();
         return redisTemplate
@@ -39,6 +39,7 @@ public class CacheRepository {
                 });
     }
 
+    @Override
     public Mono<CachedItem> getItemById(Long id) {
         String key = ITEM_KEY_PREFIX + id;
         return redisTemplate
@@ -57,6 +58,7 @@ public class CacheRepository {
                 .switchIfEmpty(Mono.empty());
     }
 
+    @Override
     public Mono<CacheSavedRs> cacheMainItems(Flux<CachedItem> items, String key) {
 
         return items
@@ -72,6 +74,7 @@ public class CacheRepository {
                 );
     }
 
+    @Override
     public Flux<CachedItem> getMainItemsByKey(String key) {
         return redisTemplate
                 .opsForValue()

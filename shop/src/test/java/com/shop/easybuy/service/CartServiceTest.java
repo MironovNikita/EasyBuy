@@ -1,5 +1,7 @@
 package com.shop.easybuy.service;
 
+import com.shop.easybuy.client.api.payment.PaymentApi;
+import com.shop.easybuy.client.model.payment.BalanceRs;
 import com.shop.easybuy.common.entity.ActionEnum;
 import com.shop.easybuy.entity.cart.CartItem;
 import com.shop.easybuy.entity.item.ItemRsDto;
@@ -7,12 +9,14 @@ import com.shop.easybuy.repository.cart.CartRepository;
 import com.shop.easybuy.repository.item.ItemRepository;
 import com.shop.easybuy.service.cart.CartServiceImpl;
 import com.shop.easybuy.utils.Utils;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -33,8 +37,16 @@ public class CartServiceTest {
     @Mock
     private ItemRepository itemRepository;
 
+    @Mock
+    private PaymentApi paymentApi;
+
     @InjectMocks
     private CartServiceImpl cartService;
+
+    @BeforeEach
+    void setUpRowSize() {
+        ReflectionTestUtils.setField(cartService, "rowSize", 2);
+    }
 
     @Test
     @DisplayName("Изменение количества товара в корзине: PLUS")
@@ -94,6 +106,7 @@ public class CartServiceTest {
         List<ItemRsDto> items = List.of(itemRsDto1, itemRsDto2);
 
         when(itemRepository.findAllInCart()).thenReturn(Flux.fromIterable(items));
+        when(paymentApi.getBalance()).thenReturn(Mono.just(new BalanceRs().balance(15000L)));
 
         StepVerifier.create(cartService.getAllItems())
                 .assertNext(found -> {
@@ -103,6 +116,7 @@ public class CartServiceTest {
                 .verifyComplete();
 
         verify(itemRepository).findAllInCart();
+        verify(paymentApi).getBalance();
     }
 
     @Test

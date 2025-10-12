@@ -35,10 +35,13 @@ subprojects {
     }
 
     dependencies {
-        implementation 'org.openapitools:jackson-databind-nullable:0.2.6'
-        implementation 'org.apache.commons:commons-lang3:3.19.0'
+        implementation "org.openapitools:jackson-databind-nullable:${jacksonVersion}"
+        implementation "org.apache.commons:commons-lang3:${lang3Version}"
         implementation "org.springdoc:springdoc-openapi-starter-webflux-ui:${springDocVersion}" exclude group: "org.apache.commons", module: "commons-lang3"
         implementation 'org.springframework.boot:spring-boot-starter-webflux'
+        implementation 'org.springframework.boot:spring-boot-testcontainers'
+        implementation 'org.testcontainers:junit-jupiter'
+        implementation 'com.redis:testcontainers-redis'
 
         compileOnly 'org.projectlombok:lombok'
         annotationProcessor "org.projectlombok:lombok:${lombokVersion}"

@@ -33,7 +33,7 @@ public class ItemControllerIntegrationTest extends BaseIntegrationTest {
                 .uri(uriBuilder -> uriBuilder
                         .path("/main/items")
                         .queryParam("search", "")
-                        .queryParam("sort", "NO")
+                        .queryParam("sort", "NONE")
                         .queryParam("pageSize", 5)
                         .queryParam("pageNumber", 0)
                         .build())
@@ -85,12 +85,12 @@ public class ItemControllerIntegrationTest extends BaseIntegrationTest {
                 .uri("/main/items/%d".formatted(itemId))
                 .body(BodyInserters.fromFormData("action", ActionEnum.PLUS.name())
                         .with("search", "")
-                        .with("sort", "NO")
+                        .with("sort", "NONE")
                         .with("pageNumber", "0")
                         .with("pageSize", "10"))
                 .exchange()
                 .expectStatus().is3xxRedirection()
-                .expectHeader().valueEquals("Location", "/main/items?search=&sort=NO&pageNumber=0&pageSize=10");
+                .expectHeader().valueEquals("Location", "/main/items?search=&sort=NONE&pageNumber=0&pageSize=10");
 
         CartItem cartItem = cartRepository.findCartItemByItemId(itemId).block();
         assertNotNull(cartItem);
@@ -110,12 +110,12 @@ public class ItemControllerIntegrationTest extends BaseIntegrationTest {
                 .uri("/main/items/%d".formatted(itemId))
                 .body(BodyInserters.fromFormData("action", ActionEnum.MINUS.name())
                         .with("search", "")
-                        .with("sort", "NO")
+                        .with("sort", "NONE")
                         .with("pageNumber", "0")
                         .with("pageSize", "10"))
                 .exchange()
                 .expectStatus().is3xxRedirection()
-                .expectHeader().valueEquals("Location", "/main/items?search=&sort=NO&pageNumber=0&pageSize=10");
+                .expectHeader().valueEquals("Location", "/main/items?search=&sort=NONE&pageNumber=0&pageSize=10");
 
         CartItem cartItem = cartRepository.findCartItemByItemId(itemId).block();
         assertNotNull(cartItem);
@@ -135,12 +135,12 @@ public class ItemControllerIntegrationTest extends BaseIntegrationTest {
                 .uri("/main/items/%d".formatted(itemId))
                 .body(BodyInserters.fromFormData("action", ActionEnum.DELETE.name())
                         .with("search", "")
-                        .with("sort", "NO")
+                        .with("sort", "NONE")
                         .with("pageNumber", "0")
                         .with("pageSize", "10"))
                 .exchange()
                 .expectStatus().is3xxRedirection()
-                .expectHeader().valueEquals("Location", "/main/items?search=&sort=NO&pageNumber=0&pageSize=10");
+                .expectHeader().valueEquals("Location", "/main/items?search=&sort=NONE&pageNumber=0&pageSize=10");
 
         CartItem cartItem = cartRepository.findCartItemByItemId(itemId).block();
         assertNull(cartItem);

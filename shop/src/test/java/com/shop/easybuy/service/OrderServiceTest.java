@@ -1,5 +1,7 @@
 package com.shop.easybuy.service;
 
+import com.shop.easybuy.client.api.payment.PaymentApi;
+import com.shop.easybuy.client.model.payment.BalanceRs;
 import com.shop.easybuy.common.exception.CartEmptyException;
 import com.shop.easybuy.common.exception.ObjectNotFoundException;
 import com.shop.easybuy.entity.cart.CartViewDto;
@@ -19,6 +21,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.ResponseEntity;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -45,6 +48,9 @@ public class OrderServiceTest {
     @Mock
     private CartService cartService;
 
+    @Mock
+    private PaymentApi paymentApi;
+
     @InjectMocks
     private OrderServiceImpl orderService;
 
@@ -59,7 +65,7 @@ public class OrderServiceTest {
         Item item = createItem(itemId);
 
         List<List<ItemRsDto>> foundItems = Utils.splitList(List.of(itemRsDto), 5);
-        CartViewDto cartViewDto = new CartViewDto(foundItems, total);
+        CartViewDto cartViewDto = new CartViewDto(foundItems, total, true, true);
         Order savedOrder = createOrder();
         savedOrder.setId(orderId);
         savedOrder.setTotal(total);
@@ -67,6 +73,7 @@ public class OrderServiceTest {
         OrderItem orderItem = createOrderItem(orderItemId, orderId, itemId);
 
         when(cartService.getAllItems()).thenReturn(Mono.just(cartViewDto));
+        when(paymentApi.payWithHttpInfo(any())).thenReturn(Mono.just(ResponseEntity.ok(new BalanceRs().balance(15000L))));
         when(orderRepository.save(any(Order.class))).thenAnswer(inv -> {
             Order order = inv.getArgument(0);
             order.setId(orderId);
@@ -93,6 +100,7 @@ public class OrderServiceTest {
                 .verifyComplete();
 
         verify(cartService).getAllItems();
+        verify(paymentApi).payWithHttpInfo(any());
         verify(orderRepository).save(argThat(order -> order.getTotal().equals(total)));
         verify(orderItemRepository).save(argThat(orderedItem -> orderedItem.getCount().equals(orderItem.getCount())));
         verify(cartService).clearCart();
@@ -103,7 +111,7 @@ public class OrderServiceTest {
     void shouldThrowCartEmptyExceptionIfCartIsEmpty() {
 
         Long total = 1000L;
-        CartViewDto cartViewDto = new CartViewDto(Collections.emptyList(), total);
+        CartViewDto cartViewDto = new CartViewDto(Collections.emptyList(), total, true, true);
 
         when(cartService.getAllItems()).thenReturn(Mono.just(cartViewDto));
 

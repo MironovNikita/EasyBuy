@@ -7,7 +7,9 @@ public class CommonPostgresContainer {
     public static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:17")
             .withDatabaseName("testDB")
             .withUsername("test")
-            .withPassword("test");
+            .withPassword("test")
+            .withReuse(true)
+            .withCreateContainerCmdModifier(cmd -> cmd.withName("test-postgres-container"));
 
     static {
         POSTGRES.start();

@@ -327,6 +327,7 @@ public static Mono<Void> insertIntoCartTable(DatabaseClient client, List<CartIte
 
 Также для успешной сборки Docker многомодульного проекта был предусмотрен дополнительный файл в модуле shop:
 - [**application-docker.properties**](https://github.com/MironovNikita/EasyBuy/blob/main/shop/src/main/resources/application-docker.properties).
+
 Для модуля redis-service:
 - [**application-local.properties**](https://github.com/MironovNikita/EasyBuy/blob/main/redis-service/src/main/resources/application-local.properties)
 - [**application-docker.properties**](https://github.com/MironovNikita/EasyBuy/blob/main/redis-service/src/main/resources/application-docker.properties)

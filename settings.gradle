@@ -1,1 +1,16 @@
+pluginManagement {
+    plugins {
+        id 'org.springframework.boot' version "${springBootVersion}"
+        id 'io.spring.dependency-management' version "${dependencyManagementVersion}"
+        id 'org.openapi.generator' version "${openApiGeneratorVersion}"
+    }
+
+    repositories {
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+
 rootProject.name = 'EasyBuy'
+
+include 'shop', 'redis-service'

@@ -1,0 +1,117 @@
+openapi: 3.1.0
+info:
+  title: Платёжный сервис
+  description: Сервис, отвечающий за получение баланса и проведение платежей
+  version: 1.0.0
+servers:
+  - url: http://localhost:8081
+paths:
+  /balance:
+    get:
+      summary: Получить текущий баланс
+      operationId: getBalance
+      tags:
+        - payment
+      responses:
+        '200':
+          description: Текущий баланс успешно получен
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/BalanceRs'
+        '404':
+          description: Баланс не найден
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorRs'
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorRs'
+  /pay:
+    post:
+      summary: Осуществить платёж
+      operationId: pay
+      tags:
+        - payment
+      requestBody:
+        required: true
+        description: Текущая сумма покупки
+        content:
+          application/json; charset=utf-8:
+            schema:
+              $ref: '#/components/schemas/PaymentRq'
+      responses:
+        '200':
+          description: Статус операции
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/BalanceRs'
+        '400':
+          description: Недостаточно средств на счёте
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorRs'
+        '404':
+          description: Баланс не найден
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorRs'
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorRs'
+
+components:
+  schemas:
+    PaymentRq:
+      type: object
+      required:
+        - amount
+      properties:
+        amount:
+          description: Сумма платежа
+          type: integer
+          format: int64
+          example: 5000
+    BalanceRs:
+      required:
+        - balance
+      type: object
+      properties:
+        balance:
+          description: Текущий баланс
+          type: integer
+          format: int64
+          example: 10000
+    StatusRs:
+      required:
+        - status
+      type: object
+      properties:
+        status:
+          description: Статус операции
+          type: boolean
+          example: true
+    ErrorRs:
+      required:
+        - errorInfo
+        - errorCode
+      type: object
+      properties:
+        errorInfo:
+          description: Информация об ошибке
+          type: string
+          example: Сервис недоступен
+        errorCode:
+          description: Информация о коде ошибки
+          type: string
+          example: 404

@@ -1,0 +1,74 @@
+import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
+
+plugins {
+    id 'org.springframework.boot'
+    id 'io.spring.dependency-management'
+    id 'org.openapi.generator'
+}
+
+description = 'Internet Shop EasyBuy'
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-data-r2dbc'
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+    implementation "org.springframework.boot:spring-boot-starter-validation"
+
+    implementation 'org.postgresql:r2dbc-postgresql'
+    implementation 'org.liquibase:liquibase-core'
+    implementation 'org.postgresql:postgresql'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.testcontainers:postgresql'
+}
+
+tasks.register("openApiGeneratePayment", GenerateTask) {
+    generatorName.set("java")
+    library.set("webclient")
+    inputSpec.set(file("${project(":redis-service").projectDir}/src/main/resources/openapi/payment-spec.yaml").toURI().toString())
+    outputDir.set("$projectDir/build/generated/payment")
+    apiPackage.set("com.shop.easybuy.client.api.payment")
+    modelPackage.set("com.shop.easybuy.client.model.payment")
+    invokerPackage.set("com.shop.easybuy.client.invoker.payment")
+    configOptions.set([
+            useReactive       : "true",
+            dateLibrary       : "java8",
+            useJakartaEe      : "true",
+            useSpringBoot3    : "true"
+    ])
+}
+
+tasks.register("openApiGenerateCache", GenerateTask) {
+    generatorName.set("java")
+    library.set("webclient")
+    inputSpec.set(file("${project(":redis-service").projectDir}/src/main/resources/openapi/cache-spec.yaml").toURI().toString())
+    outputDir.set("$projectDir/build/generated/cache")
+    apiPackage.set("com.shop.easybuy.client.api.cache")
+    modelPackage.set("com.shop.easybuy.client.model.cache")
+    invokerPackage.set("com.shop.easybuy.client.invoker.cache")
+    configOptions.set([
+            useReactive   : "true",
+            dateLibrary   : "java8",
+            useJakartaEe  : "true",
+            useSpringBoot3: "true"
+    ])
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir("$buildDir/generated/payment/src/main/java")
+            srcDir("$buildDir/generated/cache/src/main/java")
+        }
+    }
+}
+
+afterEvaluate {
+    tasks.named('compileJava') {
+        dependsOn tasks.named('openApiGeneratePayment')
+        dependsOn tasks.named('openApiGenerateCache')
+    }
+}
+
+springBoot {
+    mainClass = 'com.shop.easybuy.EasyBuyApplication'
+}

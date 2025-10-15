@@ -10,13 +10,40 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
 
   easy-buy-app:
-    build: .
+    build:
+      context: .
+      dockerfile: shop/Dockerfile
     ports:
       - "8080:8080"
     depends_on:
       - easy-buy-db
-    container_name: eb_app_container
+      - redis-service
+    container_name: eb_shop_container
     restart: on-failure
     environment:
+      SPRING_PROFILES_ACTIVE: docker
+      REDIS_SERVICE_URL: http://redis-service:8081
       DB_JDBC_URL: jdbc:postgresql://easy-buy-db:5432/${POSTGRES_DB}
       DB_R2DBC_URL: r2dbc:postgresql://easy-buy-db:5432/${POSTGRES_DB}
+
+  redis:
+    image: redis:7.4.2-bookworm
+    container_name: redis_container
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+  redis-service:
+    build:
+      context: .
+      dockerfile: redis-service/Dockerfile
+    ports:
+      - "8081:8081"
+    depends_on:
+      - redis
+    container_name: eb_redis_service_container
+    restart: on-failure
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      REDIS_HOST: redis
+      REDIS_PORT: 6379

@@ -1,6 +1,5 @@
 package com.shop.easybuy.repository.cache;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.shop.easybuy.common.exception.DeserializationException;
 import com.shop.easybuy.model.cache.CacheSavedRs;
@@ -13,7 +12,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.Duration;
-import java.util.List;
 
 @Slf4j
 @Repository
@@ -83,9 +81,8 @@ public class CacheRepositoryImpl implements CacheRepository {
                     if (object == null) return Flux.empty();
 
                     try {
-                        List<CachedItem> items = objectMapper.convertValue(object, new TypeReference<>() {
-                        });
-                        return Flux.fromIterable(items);
+                        CachedItem[] items = objectMapper.convertValue(object, CachedItem[].class);
+                        return Flux.fromArray(items);
                     } catch (IllegalArgumentException e) {
                         log.error("Ошибка при десериализации списка CachedItem: {}", e.getMessage());
                         return Flux.error(new DeserializationException("Список CachedItem"));

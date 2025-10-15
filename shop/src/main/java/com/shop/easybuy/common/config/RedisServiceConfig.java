@@ -18,7 +18,6 @@ public class RedisServiceConfig {
     public com.shop.easybuy.client.invoker.payment.ApiClient paymentApiClient() {
         return new com.shop.easybuy.client.invoker.payment.ApiClient()
                 .setBasePath(baseRedisUrl);
-        //TODO Возможно не сработает на Docker!
     }
 
     @Bean
@@ -30,7 +29,6 @@ public class RedisServiceConfig {
     public com.shop.easybuy.client.invoker.cache.ApiClient cacheApiClient() {
         return new com.shop.easybuy.client.invoker.cache.ApiClient()
                 .setBasePath(baseRedisUrl);
-        //TODO Возможно не сработает на Docker!
     }
 
     @Bean

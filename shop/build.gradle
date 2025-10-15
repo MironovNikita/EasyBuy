@@ -68,3 +68,7 @@ afterEvaluate {
         dependsOn tasks.named('openApiGenerateCache')
     }
 }
+
+springBoot {
+    mainClass = 'com.shop.easybuy.EasyBuyApplication'
+}

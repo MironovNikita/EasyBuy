@@ -41,7 +41,6 @@ subprojects {
         implementation 'org.springframework.boot:spring-boot-starter-webflux'
         implementation 'org.springframework.boot:spring-boot-testcontainers'
         implementation 'org.testcontainers:junit-jupiter'
-        implementation 'com.redis:testcontainers-redis'
 
         compileOnly 'org.projectlombok:lombok'
         annotationProcessor "org.projectlombok:lombok:${lombokVersion}"

@@ -4,7 +4,7 @@ import com.shop.easybuy.api.cache.CacheApi;
 import com.shop.easybuy.model.cache.CacheSavedRs;
 import com.shop.easybuy.model.cache.CachedItem;
 import com.shop.easybuy.model.cache.SortEnum;
-import com.shop.easybuy.service.cache.CacheServiceImpl;
+import com.shop.easybuy.service.cache.CacheService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -23,7 +23,7 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class CacheController implements CacheApi {
 
-    private final CacheServiceImpl cacheService;
+    private final CacheService cacheService;
 
     @Override
     public Mono<ResponseEntity<CacheSavedRs>> cacheItem(

@@ -1,5 +1,6 @@
 package com.shop.easybuy.repository.payment;
 
+import com.shop.easybuy.common.exception.DataNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.stereotype.Repository;
@@ -26,6 +27,7 @@ public class PaymentRepositoryImpl implements PaymentRepository {
         return redisTemplate
                 .opsForValue()
                 .get(BALANCE_KEY)
+                .switchIfEmpty(Mono.error(new DataNotFoundException("balance")))
                 .map(Long::parseLong)
                 .flatMap(current -> {
                     long newBalance = current - amount;

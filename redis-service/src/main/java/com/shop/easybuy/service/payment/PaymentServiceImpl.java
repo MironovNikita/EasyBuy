@@ -3,7 +3,7 @@ package com.shop.easybuy.service.payment;
 import com.shop.easybuy.common.exception.DataNotFoundException;
 import com.shop.easybuy.model.payment.BalanceRs;
 import com.shop.easybuy.model.payment.PaymentRq;
-import com.shop.easybuy.repository.payment.PaymentRepositoryImpl;
+import com.shop.easybuy.repository.payment.PaymentRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -14,10 +14,9 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class PaymentServiceImpl implements PaymentService {
 
-    private final PaymentRepositoryImpl paymentRepository;
+    private final PaymentRepository paymentRepository;
 
     public Mono<BalanceRs> getBalance() {
-
         return paymentRepository
                 .getBalance()
                 .switchIfEmpty(Mono.error(new DataNotFoundException("balance")))

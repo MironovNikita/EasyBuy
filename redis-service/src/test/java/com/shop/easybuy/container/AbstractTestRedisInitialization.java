@@ -11,7 +11,7 @@ public abstract class AbstractTestRedisInitialization {
 
     @DynamicPropertySource
     static void dynamicProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.redis.host", CommonRedisContainer::getHost);
-        registry.add("spring.redis.port", CommonRedisContainer::getPort);
+        registry.add("spring.data.redis.host", CommonRedisContainer::getHost);
+        registry.add("spring.data.redis.port", CommonRedisContainer::getPort);
     }
 }

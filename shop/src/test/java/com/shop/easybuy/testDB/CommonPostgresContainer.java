@@ -8,7 +8,6 @@ public class CommonPostgresContainer {
             .withDatabaseName("testDB")
             .withUsername("test")
             .withPassword("test")
-            .withReuse(true)
             .withCreateContainerCmdModifier(cmd -> cmd.withName("test-postgres-container"));
 
     static {

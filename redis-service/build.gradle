@@ -6,12 +6,13 @@ plugins {
     id 'org.openapi.generator'
 }
 
-description = 'Internet Shop EasyBuy'
+description = 'Redis cache service'
 
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-redis-reactive'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'com.redis:testcontainers-redis'
 }
 
 tasks.register("openApiGeneratePayment", GenerateTask) {
@@ -64,4 +65,8 @@ afterEvaluate {
         dependsOn tasks.named('openApiGeneratePayment')
         dependsOn tasks.named('openApiGenerateCache')
     }
+}
+
+springBoot {
+    mainClass = 'com.shop.easybuy.RedisApplication'
 }

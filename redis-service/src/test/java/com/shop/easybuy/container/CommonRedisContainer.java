@@ -7,16 +7,10 @@ public class CommonRedisContainer {
 
     public static final RedisContainer REDIS = new RedisContainer(
             DockerImageName.parse("redis:7.4.2-bookworm"))
-            .withExposedPorts(6379)
-            .withReuse(true)
             .withCreateContainerCmdModifier(cmd -> cmd.withName("test-redis-container"));
 
     static {
         REDIS.start();
-    }
-
-    public static String getRedisUrl() {
-        return String.format("redis://%s:%d", getHost(), getPort());
     }
 
     public static String getHost() {

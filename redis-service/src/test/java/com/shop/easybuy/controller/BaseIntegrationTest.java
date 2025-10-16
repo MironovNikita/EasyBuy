@@ -1,7 +1,6 @@
 package com.shop.easybuy.controller;
 
 import com.shop.easybuy.container.AbstractTestRedisInitialization;
-import com.shop.easybuy.service.cache.CacheService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -19,7 +18,4 @@ public abstract class BaseIntegrationTest extends AbstractTestRedisInitializatio
 
     @Autowired
     protected ReactiveStringRedisTemplate redisTemplate;
-
-    @Autowired
-    protected CacheService cacheService;
 }

@@ -22,11 +22,6 @@ public class GlobalExceptionHandler {
         return buildErrorRs(e, HttpStatus.PAYMENT_REQUIRED);
     }
 
-    @ExceptionHandler(DeserializationException.class)
-    public Mono<ResponseEntity<ErrorRs>> handleDeserializationException(DeserializationException e) {
-        return buildErrorRs(e, HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-
     @ExceptionHandler(Exception.class)
     public Mono<ResponseEntity<ErrorRs>> handleException(Exception e) {
         return buildErrorRs(e, HttpStatus.INTERNAL_SERVER_ERROR);

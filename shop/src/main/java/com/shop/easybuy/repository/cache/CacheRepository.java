@@ -1,7 +1,7 @@
 package com.shop.easybuy.repository.cache;
 
-import com.shop.easybuy.model.cache.CacheSavedRs;
-import com.shop.easybuy.model.cache.CachedItem;
+import com.shop.easybuy.entity.cache.CacheSavedRs;
+import com.shop.easybuy.entity.cache.CachedItem;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 

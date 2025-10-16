@@ -20,14 +20,14 @@
 - страница корзины. Либо отображает, что сама корзина пуста, либо отображает всё те же атрибуты товара с возможности оформить заказ посредством кнопки "Купить";
 - страница заказа отображает все товары выбранного заказа с отображением их атрибутов, а также показывает дату и время оформления заказа;
 - страница списка заказов отображает краткое описание всех имеющихся заказов: названия товаров, их количество, цена, итоговая сумма, дата и время оформления самого заказа;
-- также предусмотрена страница, которая выводит на пользовательский экран сообщение об ошибке с возможностью возврата на предыдущую  или на главную страницу.
+- страница, которая выводит на пользовательский экран сообщение об ошибке с возможностью возврата на предыдущую  или на главную страницу;
+- кеширование - осуществляет кеширование товаров главной страницы с параметрами поиска и фильтрации, а также кеширует страницы отдельных товаров.
 
 Для хранения данных используется БД PostgreSQL 17 версии. Для интеграционного тестирования применяется технология TestContainers, которая позволяет для тестирования поднять БД аналогичную основной.
 Приложение покрыто unit и интеграционными тестами с использованием JUnit 5 и Spring TestContext Framework, с применением кэширования контекстов.
 
-**Redis-service** состоит из двух подчастей:
+**Redis-service** отвечает за платежи:
 - сервиса платежей - осуществляет проверку баланса, хранящегося в Redis, и списание средств при оформлении заказа;
-- сервиса кеширования - осуществляет кеширование товаров главной страницы с параметрами поиска и фильтрации, а также кеширует страницы отдельных товаров.
 
 ### 🧩 Основные сущности модуля Shop 📇
 - [**Item**](https://github.com/MironovNikita/EasyBuy/blob/main/src/main/java/com/shop/easybuy/entity/item/Item.java) - отвечает за содержание основной информации о товаре.
@@ -46,9 +46,9 @@
 Все таблицы в БД приложения создаются и заполняются посредством Liquibase-скриптов. Ознакомиться с ними можно [**здесь**](https://github.com/MironovNikita/EasyBuy/blob/main/src/main/resources/db/changelog/liquibase). Заполнение осуществляется только для таблицы товаров items. Соответствующие ресурсы (картинки) для них расположены [**тут**](https://github.com/MironovNikita/EasyBuy/blob/main/src/main/resources/db/item.images).
 
 ### 🌐 Генерация контроллеров и клиента посредством OpenAPI
-Как упоминалось выше, связь модулей осуществляется через RESTful-взаимодействие. При этом основной модуль [**shop**](https://github.com/MironovNikita/EasyBuy/tree/main/shop) взаимодействует с модулем [**redis-service**](https://github.com/MironovNikita/EasyBuy/tree/main/redis-service) посредством клиента со своей стороны и контроллеров ([**PaymentController**](https://github.com/MironovNikita/EasyBuy/blob/main/redis-service/src/main/java/com/shop/easybuy/controller/payment/PaymentController.java) и [**CacheController**](https://github.com/MironovNikita/EasyBuy/blob/main/redis-service/src/main/java/com/shop/easybuy/controller/cache/CacheController.java)) со стороны redis-модуля.
+Как упоминалось выше, связь модулей осуществляется через RESTful-взаимодействие. При этом основной модуль [**shop**](https://github.com/MironovNikita/EasyBuy/tree/main/shop) взаимодействует с модулем [**redis-service**](https://github.com/MironovNikita/EasyBuy/tree/main/redis-service) посредством клиента со своей стороны и контроллера ([**PaymentController**](https://github.com/MironovNikita/EasyBuy/blob/main/redis-service/src/main/java/com/shop/easybuy/controller/payment/PaymentController.java) со стороны redis-модуля для осуществления платежей.
 
-Все классы, включая DTO, генерируются по документации, описанной в [**cache-spec.yaml**](https://github.com/MironovNikita/EasyBuy/blob/main/redis-service/src/main/resources/openapi/cache-spec.yaml) и [**payment-spec.yaml**](https://github.com/MironovNikita/EasyBuy/blob/main/redis-service/src/main/resources/openapi/payment-spec.yaml).
+Все классы, включая DTO, генерируются по документации, описанной в [**payment-spec.yaml**](https://github.com/MironovNikita/EasyBuy/blob/main/redis-service/src/main/resources/openapi/payment-spec.yaml).
 
 ### 🚀 Запуск программы
 
@@ -96,7 +96,7 @@ Attaching to eb_database_container, eb_redis_service_container, eb_shop_containe
 
 </p>
 
-Как можем видеть из логов, наши Liquibase-скрипты отрабатывают успешно:
+Логи модулей:
 ```java
 //Для Redis:
 eb_redis_service_container  | 2025-10-15 - 00:53:33.464 (Z)  INFO 1 ---> [main] o.s.d.r.c.RepositoryConfigurationDelegate : Multiple Spring Data modules found, entering strict repository configuration mode
@@ -109,7 +109,7 @@ eb_redis_service_container  | 2025-10-15 - 00:53:35.241 (Z)  INFO 1 ---> [main] 
 eb_redis_service_container  | 2025-10-15 - 00:53:35.586 (Z)  INFO 1 ---> [lettuce-epollEventLoop-5-1] c.s.e.c.i.RedisDataInitializer : Redis доступен.
 eb_redis_service_container  | 2025-10-15 - 00:53:35.600 (Z)  INFO 1 ---> [lettuce-epollEventLoop-5-1] c.s.e.c.i.RedisDataInitializer : Значение баланса в Redis успешно проинициализировано: 15000 руб.
 
-//Для Shop:
+//Для Shop наши Liquibase-скрипты отрабатывают успешно:
 eb_shop_container           | 2025-10-15 - 00:53:36.775 (Z)  INFO 1 ---> [main] liquibase.util : UPDATE summary eb_shop_container           | 2025-10-15 - 00:53:36.775 (Z)  INFO 1 ---> [main] liquibase.util : Run:                          5
 eb_shop_container           | 2025-10-15 - 00:53:36.776 (Z)  INFO 1 ---> [main] liquibase.util : Previously run:               0
 eb_shop_container           | 2025-10-15 - 00:53:36.776 (Z)  INFO 1 ---> [main] liquibase.util : Filtered out:                 0
@@ -205,33 +205,35 @@ eb_shop_container           | 2025-10-15 - 00:53:38.435 (Z)  INFO 1 ---> [main] 
 ## 🗒️ Логирование 🔍
 В приложении также предусмотрено логирование. Логи пишутся непосредственно в консоль. Ниже приведён пример логов:
 ```java
-eb_redis_service_container  | 2025-10-15 - 01:01:50.661 (Z)  INFO 1 ---> [lettuce-epollEventLoop-5-1] c.s.e.service.cache.CacheServiceImpl : Товары не найдены в кеше по параметрам: search - , sort - NONE, pageSize - 10, pageNumber - 0.
-eb_redis_service_container  | 2025-10-15 - 01:01:50.676 (Z)  INFO 1 ---> [reactor-http-epoll-2] c.s.e.filter.RequestLoggingFilter : GET-запрос http://redis-service:8081/cache/main/items?search=&sort=NONE&pageSize=10&pageNumber=0 выполнен за 217 мс
-eb_shop_container           | 2025-10-15 - 01:01:50.736 (Z)  INFO 1 ---> [reactor-http-epoll-5] c.s.e.service.item.ItemServiceImpl : Данные по параметрам (search: "", sort: NONE, pageSize: 10, pageNumber: 0) не найдены в кеше.
-eb_redis_service_container  | 2025-10-15 - 01:01:51.003 (Z)  INFO 1 ---> [lettuce-epollEventLoop-5-1] c.s.e.service.cache.CacheServiceImpl : Товары успешно кешированы с параметрами: search - , sort - NONE, pageSize - 10, pageNumber - 0.
-eb_redis_service_container  | 2025-10-15 - 01:01:51.009 (Z)  INFO 1 ---> [lettuce-epollEventLoop-5-1] c.s.e.filter.RequestLoggingFilter : POST-запрос http://redis-service:8081/cache/main/items?search=&sort=NONE&pageSize=10&pageNumber=0 выполнен за 163 мс
-eb_shop_container           | 2025-10-15 - 01:01:51.021 (Z)  INFO 1 ---> [reactor-http-epoll-5] c.s.e.service.item.ItemServiceImpl : Товары на главной странице (6 шт.) сохранены в кеш.
-eb_shop_container           | 2025-10-15 - 01:01:51.345 (Z)  INFO 1 ---> [parallel-2] c.s.e.c.filter.RequestLoggingFilter : GET-запрос http://localhost:8080/easy-buy/main/items выполнен за 1406 мс.
-eb_shop_container           | 2025-10-15 - 01:01:56.714 (Z)  INFO 1 ---> [reactor-tcp-epoll-1] c.s.e.service.cart.CartServiceImpl : В корзине обновлено количество товара с ID 1. Текущее количество: 1.
-eb_shop_container           | 2025-10-15 - 01:01:56.734 (Z)  INFO 1 ---> [reactor-tcp-epoll-1] c.s.e.c.filter.RequestLoggingFilter : POST-запрос http://localhost:8080/easy-buy/main/items/1 выполнен за 83 мс.
-eb_redis_service_container  | 2025-10-15 - 01:01:56.763 (Z)  INFO 1 ---> [reactor-http-epoll-2] c.s.e.service.cache.CacheServiceImpl : Товары успешно извлечены из кеша по параметрам: search - , sort - NONE, pageSize - 10, pageNumber - 0.
-eb_shop_container           | 2025-10-15 - 01:01:56.766 (Z)  INFO 1 ---> [reactor-http-epoll-5] c.s.e.service.item.ItemServiceImpl : Главная страница с товарами (6 шт.) получена из кеша.
-eb_redis_service_container  | 2025-10-15 - 01:01:56.764 (Z)  INFO 1 ---> [reactor-http-epoll-2] c.s.e.filter.RequestLoggingFilter : GET-запрос http://redis-service:8081/cache/main/items?search=&sort=NONE&pageSize=10&pageNumber=0 выполнен за 21 мс
-eb_shop_container           | 2025-10-15 - 01:01:56.785 (Z)  INFO 1 ---> [parallel-3] c.s.e.c.filter.RequestLoggingFilter : GET-запрос http://localhost:8080/easy-buy/main/items?search=&sort=NONE&pageNumber=0&pageSize=10 выполнен за 46 мс.
-eb_redis_service_container  | 2025-10-15 - 01:01:58.138 (Z)  INFO 1 ---> [lettuce-epollEventLoop-5-1] c.s.e.service.cache.CacheServiceImpl : Товар с ID 1 не найден в кеше
-eb_redis_service_container  | 2025-10-15 - 01:01:58.138 (Z)  INFO 1 ---> [lettuce-epollEventLoop-5-1] c.s.e.filter.RequestLoggingFilter : GET-запрос http://redis-service:8081/cache/item/1 выполнен за 3 мс
-eb_redis_service_container  | 2025-10-15 - 01:01:58.208 (Z)  INFO 1 ---> [lettuce-epollEventLoop-5-1] c.s.e.service.cache.CacheServiceImpl : Товар с ID 1 успешно кеширован. Статус: true
-eb_shop_container           | 2025-10-15 - 01:01:58.211 (Z)  INFO 1 ---> [reactor-http-epoll-5] c.s.e.service.item.ItemServiceImpl : Товар с ID 1 сохранён в кеш.
-eb_redis_service_container  | 2025-10-15 - 01:01:58.210 (Z)  INFO 1 ---> [lettuce-epollEventLoop-5-1] c.s.e.filter.RequestLoggingFilter : POST-запрос http://redis-service:8081/cache/item/1 выполнен за 44 мс
-eb_shop_container           | 2025-10-15 - 01:01:58.224 (Z)  INFO 1 ---> [parallel-4] c.s.e.c.filter.RequestLoggingFilter : GET-запрос http://localhost:8080/easy-buy/items/1 выполнен за 95 мс.
-eb_redis_service_container  | 2025-10-15 - 01:02:00.028 (Z)  INFO 1 ---> [lettuce-epollEventLoop-5-1] c.s.e.s.payment.PaymentServiceImpl : Значение баланса успешно извлечено: 15000
-eb_shop_container           | 2025-10-15 - 01:02:00.033 (Z)  INFO 1 ---> [reactor-http-epoll-5] c.s.e.service.cart.CartServiceImpl : В корзине найдено 1 товаров.
-eb_redis_service_container  | 2025-10-15 - 01:02:00.030 (Z)  INFO 1 ---> [lettuce-epollEventLoop-5-1] c.s.e.filter.RequestLoggingFilter : GET-запрос http://redis-service:8081/balance выполнен за 7 мс
-eb_shop_container           | 2025-10-15 - 01:02:00.045 (Z)  INFO 1 ---> [parallel-5] c.s.e.c.filter.RequestLoggingFilter : GET-запрос http://localhost:8080/easy-buy/cart/items выполнен за 33 мс.
-eb_redis_service_container  | 2025-10-15 - 01:02:01.535 (Z)  INFO 1 ---> [lettuce-epollEventLoop-5-1] c.s.e.s.payment.PaymentServiceImpl : Значение баланса успешно извлечено: 15000
-eb_shop_container           | 2025-10-15 - 01:02:01.538 (Z)  INFO 1 ---> [reactor-http-epoll-5] c.s.e.service.cart.CartServiceImpl : В корзине найдено 1 товаров.
-eb_shop_container           | 2025-10-15 - 01:02:01.570 (Z)  INFO 1 ---> [reactor-http-epoll-5] c.s.e.service.order.OrderServiceImpl : Списание средств успешно произведено. Текущий баланс: 10000. Формируем заказ...
-eb_redis_service_container  | 2025-10-15 - 01:02:01.564 (Z)  INFO 1 ---> [lettuce-epollEventLoop-5-1] c.s.e.s.payment.PaymentServiceImpl : Платёж успешно совершён. Остаток средств на балансе: 10000                  
+eb_shop_container           | 2025-10-16 - 14:39:55.133 (Z)  INFO 1 ---> [lettuce-epollEventLoop-7-1] c.s.e.service.item.ItemServiceImpl : Данные по параметрам (search: "", sort: NONE, pageSize: 10, pageNumber: 0) не найдены в кеше.
+eb_shop_container           | 2025-10-16 - 14:39:55.210 (Z)  INFO 1 ---> [lettuce-epollEventLoop-7-1] c.s.e.service.item.ItemServiceImpl : Товары на главной странице (6 шт.) сохранены в кеш.
+eb_shop_container           | 2025-10-16 - 14:39:55.476 (Z)  INFO 1 ---> [parallel-2] c.s.e.c.filter.RequestLoggingFilter : GET-запрос http://localhost:8080/easy-buy/main/items выполнен за 806 мс.
+eb_shop_container           | 2025-10-16 - 14:40:02.261 (Z)  INFO 1 ---> [reactor-tcp-epoll-1] c.s.e.service.cart.CartServiceImpl : В корзине обновлено количество товара с ID 1. Текущее количество: 1.
+eb_shop_container           | 2025-10-16 - 14:40:02.271 (Z)  INFO 1 ---> [reactor-tcp-epoll-1] c.s.e.c.filter.RequestLoggingFilter : POST-запрос http://localhost:8080/easy-buy/main/items/1 выполнен за 51 мс.
+eb_shop_container           | 2025-10-16 - 14:40:02.312 (Z)  INFO 1 ---> [lettuce-epollEventLoop-7-1] c.s.e.service.item.ItemServiceImpl : Главная страница с товарами (6 шт.) получена из кеша.
+eb_shop_container           | 2025-10-16 - 14:40:02.333 (Z)  INFO 1 ---> [parallel-3] c.s.e.c.filter.RequestLoggingFilter : GET-запрос http://localhost:8080/easy-buy/main/items?search=&sort=NONE&pageNumber=0&pageSize=10 выполнен за 57 мс.                                                                        eb_shop_container           | 2025-10-16 - 14:40:04.345 (Z)  INFO 1 ---> [reactor-tcp-epoll-1] c.s.e.service.cart.CartServiceImpl : В корзине обновлено количество товара с ID 1. Текущее количество: 2.
+eb_shop_container           | 2025-10-16 - 14:40:04.349 (Z)  INFO 1 ---> [reactor-tcp-epoll-1] c.s.e.c.filter.RequestLoggingFilter : POST-запрос http://localhost:8080/easy-buy/main/items/1 выполнен за 21 мс.
+eb_shop_container           | 2025-10-16 - 14:40:04.359 (Z)  INFO 1 ---> [lettuce-epollEventLoop-7-1] c.s.e.service.item.ItemServiceImpl : Главная страница с товарами (6 шт.) получена из кеша.
+eb_shop_container           | 2025-10-16 - 14:40:04.377 (Z)  INFO 1 ---> [parallel-4] c.s.e.c.filter.RequestLoggingFilter : GET-запрос http://localhost:8080/easy-buy/main/items?search=&sort=NONE&pageNumber=0&pageSize=10 выполнен за 23 мс.                                                                        eb_shop_container           | 2025-10-16 - 14:40:07.530 (Z)  INFO 1 ---> [reactor-tcp-epoll-1] c.s.e.service.cart.CartServiceImpl : В корзине обновлено количество товара с ID 2. Текущее количество: 1.
+eb_shop_container           | 2025-10-16 - 14:40:07.535 (Z)  INFO 1 ---> [reactor-tcp-epoll-1] c.s.e.c.filter.RequestLoggingFilter : POST-запрос http://localhost:8080/easy-buy/main/items/2 выполнен за 9 мс.
+eb_shop_container           | 2025-10-16 - 14:40:07.544 (Z)  INFO 1 ---> [lettuce-epollEventLoop-7-1] c.s.e.service.item.ItemServiceImpl : Главная страница с товарами (6 шт.) получена из кеша.
+eb_shop_container           | 2025-10-16 - 14:40:07.564 (Z)  INFO 1 ---> [parallel-5] c.s.e.c.filter.RequestLoggingFilter : GET-запрос http://localhost:8080/easy-buy/main/items?search=&sort=NONE&pageNumber=0&pageSize=10 выполнен за 23 мс.                                                                        eb_redis_service_container  | 2025-10-16 - 14:40:08.979 (Z)  INFO 1 ---> [lettuce-epollEventLoop-7-1] c.s.e.s.payment.PaymentServiceImpl : Значение баланса успешно извлечено: 15000
+eb_redis_service_container  | 2025-10-16 - 14:40:09.011 (Z)  INFO 1 ---> [lettuce-epollEventLoop-7-1] c.s.e.filter.RequestLoggingFilter : GET-запрос http://redis-service:8081/balance выполнен за 75 мс
+eb_shop_container           | 2025-10-16 - 14:40:09.024 (Z)  INFO 1 ---> [reactor-http-epoll-9] c.s.e.service.cart.CartServiceImpl : В корзине найдено 2 товаров.
+eb_shop_container           | 2025-10-16 - 14:40:09.041 (Z)  INFO 1 ---> [parallel-6] c.s.e.c.filter.RequestLoggingFilter : GET-запрос http://localhost:8080/easy-buy/cart/items выполнен за 220 мс.
+eb_redis_service_container  | 2025-10-16 - 14:40:10.136 (Z)  INFO 1 ---> [lettuce-epollEventLoop-7-1] c.s.e.s.payment.PaymentServiceImpl : Значение баланса успешно извлечено: 15000
+eb_shop_container           | 2025-10-16 - 14:40:10.138 (Z)  INFO 1 ---> [reactor-http-epoll-9] c.s.e.service.cart.CartServiceImpl : В корзине найдено 2 товаров.
+eb_redis_service_container  | 2025-10-16 - 14:40:10.137 (Z)  INFO 1 ---> [lettuce-epollEventLoop-7-1] c.s.e.filter.RequestLoggingFilter : GET-запрос http://redis-service:8081/balance выполнен за 3 мс
+eb_redis_service_container  | 2025-10-16 - 14:40:10.267 (Z)  INFO 1 ---> [lettuce-epollEventLoop-7-1] c.s.e.s.payment.PaymentServiceImpl : Платёж успешно совершён. Остаток средств на балансе: 4300
+eb_shop_container           | 2025-10-16 - 14:40:10.271 (Z)  INFO 1 ---> [reactor-http-epoll-9] c.s.e.service.order.OrderServiceImpl : Списание средств успешно произведено. Текущий баланс: 4300. Формируем заказ...
+eb_redis_service_container  | 2025-10-16 - 14:40:10.269 (Z)  INFO 1 ---> [lettuce-epollEventLoop-7-1] c.s.e.filter.RequestLoggingFilter : POST-запрос http://redis-service:8081/pay выполнен за 119 мс
+eb_shop_container           | 2025-10-16 - 14:40:10.291 (Z)  INFO 1 ---> [reactor-tcp-epoll-1] c.s.e.service.cart.CartServiceImpl : Корзина была очищена.
+eb_shop_container           | 2025-10-16 - 14:40:10.291 (Z)  INFO 1 ---> [reactor-tcp-epoll-1] c.s.e.service.order.OrderServiceImpl : Сформирован заказ с ID 1 и количеством товаров 2.
+eb_shop_container           | 2025-10-16 - 14:40:10.299 (Z)  INFO 1 ---> [reactor-tcp-epoll-1] c.s.e.c.filter.RequestLoggingFilter : POST-запрос http://localhost:8080/easy-buy/buy выполнен за 173 мс.
+eb_shop_container           | 2025-10-16 - 14:40:10.321 (Z)  INFO 1 ---> [reactor-tcp-epoll-1] c.s.e.service.order.OrderServiceImpl : Найден заказ с ID 1 и количеством товаров 2.
+eb_shop_container           | 2025-10-16 - 14:40:10.337 (Z)  INFO 1 ---> [parallel-7] c.s.e.c.filter.RequestLoggingFilter : GET-запрос http://localhost:8080/easy-buy/orders/1?newOrder=true выполнен за 33 мс.
+eb_shop_container           | 2025-10-16 - 14:40:11.944 (Z)  INFO 1 ---> [lettuce-epollEventLoop-7-1] c.s.e.service.item.ItemServiceImpl : Главная страница с товарами (6 шт.) получена из кеша.
+eb_shop_container           | 2025-10-16 - 14:40:11.958 (Z)  INFO 1 ---> [parallel-8] c.s.e.c.filter.RequestLoggingFilter : GET-запрос http://localhost:8080/easy-buy/main/items выполнен за 17 мс.                                                 
 ```
 
 Как можно заметить, в логи также пишется и время выполнения запроса. Данную возможность предоставляет [**RequestLoggingFilter**](https://github.com/MironovNikita/EasyBuy/blob/main/src/main/java/com/shop/easybuy/common/filter/RequestLoggingFilter.java) - компонент Spring, реализующий **WebFilter**, для логирования времени выполнения HTTP-запросов в shop-модуле и [**RequestLoggingFilter**](https://github.com/MironovNikita/EasyBuy/blob/main/redis-service/src/main/java/com/shop/easybuy/filter/RequestLoggingFilter.java) в redis-service.
@@ -338,8 +340,8 @@ public static Mono<Void> insertIntoCartTable(DatabaseClient client, List<CartIte
 ```java
 //Для модуля redis-service
 --------------------------------------------------
-Тестов всего: 34
-Успешно:      34
+Тестов всего: 13
+Успешно:      13
 Провалено:    0
 Пропущено:    0
 Результат:    SUCCESS
@@ -350,8 +352,8 @@ public static Mono<Void> insertIntoCartTable(DatabaseClient client, List<CartIte
 
 //Для модуля shop:
 --------------------------------------------------
-Тестов всего: 51
-Успешно:      51
+Тестов всего: 61
+Успешно:      61
 Провалено:    0
 Пропущено:    0
 Результат:    SUCCESS

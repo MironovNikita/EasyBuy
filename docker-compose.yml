@@ -17,7 +17,6 @@ services:
       - "8080:8080"
     depends_on:
       - easy-buy-db
-      - redis-service
     container_name: eb_shop_container
     restart: on-failure
     environment:

@@ -1,5 +1,6 @@
 package com.shop.easybuy;
 
+import com.shop.easybuy.entity.cache.CachedItem;
 import com.shop.easybuy.entity.item.Item;
 import com.shop.easybuy.entity.item.ItemRsDto;
 import com.shop.easybuy.entity.order.Order;
@@ -40,7 +41,7 @@ public class DataCreator {
         return item;
     }
 
-    public OrderItem createOrderItem(Long id, Long orderId, Long itemId) {
+    public static OrderItem createOrderItem(Long id, Long orderId, Long itemId) {
         OrderItem orderItem = new OrderItem();
         orderItem.setId(id);
         orderItem.setOrderId(orderId);
@@ -49,7 +50,7 @@ public class DataCreator {
         return orderItem;
     }
 
-    public OrderFlatDto createOrderFlatDto(Long orderId, Long orderItemId, Long itemId) {
+    public static OrderFlatDto createOrderFlatDto(Long orderId, Long orderItemId, Long itemId) {
         return new OrderFlatDto(
                 orderId,
                 10000L,
@@ -61,6 +62,16 @@ public class DataCreator {
                 "Test description",
                 "Test image",
                 1000L
+        );
+    }
+
+    public static CachedItem createCachedItem(Long itemId) {
+        return new CachedItem(
+                itemId,
+                "Test title",
+                "Test description",
+                "Test image",
+                5000L
         );
     }
 }

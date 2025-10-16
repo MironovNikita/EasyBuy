@@ -9,8 +9,6 @@ plugins {
 description = 'Redis cache service'
 
 dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter-data-redis-reactive'
-
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'com.redis:testcontainers-redis'
 }
@@ -21,24 +19,6 @@ tasks.register("openApiGeneratePayment", GenerateTask) {
     outputDir.set("$projectDir/build/generated/payment")
     apiPackage.set("com.shop.easybuy.api.payment")
     modelPackage.set("com.shop.easybuy.model.payment")
-    configOptions.set([
-            interfaceOnly     : "true",
-            useBeanValidation : "true",
-            library           : "spring-boot",
-            reactive          : "true",
-            useTags           : "true",
-            dateLibrary       : "java8",
-            useJakartaEe      : "true",
-            useSpringBoot3    : "true"
-    ])
-}
-
-tasks.register("openApiGenerateCache", GenerateTask) {
-    generatorName.set("spring")
-    inputSpec.set(file("$projectDir/src/main/resources/openapi/cache-spec.yaml").toURI().toString())
-    outputDir.set("$projectDir/build/generated/cache")
-    apiPackage.set("com.shop.easybuy.api.cache")
-    modelPackage.set("com.shop.easybuy.model.cache")
     configOptions.set([
             interfaceOnly     : "true",
             useBeanValidation : "true",
@@ -63,7 +43,6 @@ sourceSets {
 afterEvaluate {
     tasks.named('compileJava') {
         dependsOn tasks.named('openApiGeneratePayment')
-        dependsOn tasks.named('openApiGenerateCache')
     }
 }
 

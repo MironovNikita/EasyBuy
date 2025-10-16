@@ -1,9 +1,7 @@
-package com.shop.easybuy.repository;
+package com.shop.easybuy.repository.cache;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.shop.easybuy.common.exception.DeserializationException;
-import com.shop.easybuy.model.cache.CachedItem;
-import com.shop.easybuy.repository.cache.CacheRepositoryImpl;
+import com.shop.easybuy.entity.cache.CachedItem;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -20,6 +18,7 @@ import reactor.test.StepVerifier;
 import java.time.Duration;
 import java.util.List;
 
+import static com.shop.easybuy.DataCreator.createCachedItem;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -55,12 +54,12 @@ public class CacheRepositoryTest {
     void shouldCacheItem() {
         long itemId = 1L;
         String itemKey = ITEM_KEY_PREFIX + itemId;
-        CachedItem item = new CachedItem().id(itemId);
+        CachedItem item = createCachedItem(itemId);
 
         when(valueOperations.set(itemKey, item, cacheLiveTime)).thenReturn(Mono.just(true));
 
         StepVerifier.create(cacheRepository.cacheItem(item))
-                .assertNext(result -> assertTrue(result.getSaved()))
+                .assertNext(result -> assertTrue(result.saved()))
                 .verifyComplete();
 
         verify(valueOperations).set(itemKey, item, cacheLiveTime);
@@ -71,12 +70,12 @@ public class CacheRepositoryTest {
     void shouldThrowExceptionWhenCacheItem() {
         long itemId = 1L;
         String itemKey = ITEM_KEY_PREFIX + itemId;
-        CachedItem item = new CachedItem().id(itemId);
+        CachedItem item = createCachedItem(itemId);
 
         when(valueOperations.set(itemKey, item, cacheLiveTime)).thenReturn(Mono.error(new RuntimeException()));
 
         StepVerifier.create(cacheRepository.cacheItem(item))
-                .assertNext(result -> assertFalse(result.getSaved()))
+                .assertNext(result -> assertFalse(result.saved()))
                 .verifyComplete();
 
         verify(valueOperations).set(itemKey, item, cacheLiveTime);
@@ -87,7 +86,7 @@ public class CacheRepositoryTest {
     void shouldReturnItemFromCache() {
         long itemId = 1L;
         String itemKey = ITEM_KEY_PREFIX + itemId;
-        CachedItem item = new CachedItem().id(itemId);
+        CachedItem item = createCachedItem(itemId);
 
         when(valueOperations.get(itemKey)).thenReturn(Mono.just(item));
         when(objectMapper.convertValue(any(), eq(CachedItem.class))).thenReturn(item);
@@ -119,15 +118,14 @@ public class CacheRepositoryTest {
     void shouldThrowIllegalArgumentExceptionWhenMapping() {
         long itemId = 1L;
         String itemKey = ITEM_KEY_PREFIX + itemId;
-        CachedItem item = new CachedItem().id(itemId);
+        CachedItem item = createCachedItem(itemId);
 
         when(valueOperations.get(itemKey)).thenReturn(Mono.just(item));
         when(objectMapper.convertValue(any(), eq(CachedItem.class))).thenThrow(new IllegalArgumentException());
 
         StepVerifier.create(cacheRepository.getItemById(itemId))
-                .expectErrorMatches(throwable -> throwable instanceof DeserializationException &&
-                        throwable.getMessage().equals("Ошибка десериализации объекта: CachedItem"))
-                .verify();
+                .expectNextCount(0)
+                .verifyComplete();
 
         verify(valueOperations).get(itemKey);
     }
@@ -137,15 +135,15 @@ public class CacheRepositoryTest {
     void shouldCacheItemsFromMainPage() {
         long itemId1 = 1L;
         long itemId2 = 2L;
-        CachedItem item1 = new CachedItem().id(itemId1);
-        CachedItem item2 = new CachedItem().id(itemId2);
+        CachedItem item1 = createCachedItem(itemId1);
+        CachedItem item2 = createCachedItem(itemId2);
         String itemsKey = "items:";
         List<CachedItem> cachedList = List.of(item1, item2);
 
         when(valueOperations.set(itemsKey, cachedList, cacheLiveTime)).thenReturn(Mono.just(true));
 
         StepVerifier.create(cacheRepository.cacheMainItems(Flux.just(item1, item2), itemsKey))
-                .assertNext(result -> assertTrue(result.getSaved()))
+                .assertNext(result -> assertTrue(result.saved()))
                 .verifyComplete();
 
         verify(valueOperations).set(itemsKey, cachedList, cacheLiveTime);
@@ -156,15 +154,15 @@ public class CacheRepositoryTest {
     void shouldReturnFalseIfItemsNotCached() {
         long itemId1 = 1L;
         long itemId2 = 2L;
-        CachedItem item1 = new CachedItem().id(itemId1);
-        CachedItem item2 = new CachedItem().id(itemId2);
+        CachedItem item1 = createCachedItem(itemId1);
+        CachedItem item2 = createCachedItem(itemId2);
         String itemsKey = "items:";
         List<CachedItem> cachedList = List.of(item1, item2);
 
         when(valueOperations.set(itemsKey, cachedList, cacheLiveTime)).thenReturn(Mono.just(false));
 
         StepVerifier.create(cacheRepository.cacheMainItems(Flux.just(item1, item2), itemsKey))
-                .assertNext(result -> assertFalse(result.getSaved()))
+                .assertNext(result -> assertFalse(result.saved()))
                 .verifyComplete();
 
         verify(valueOperations).set(itemsKey, cachedList, cacheLiveTime);
@@ -175,8 +173,8 @@ public class CacheRepositoryTest {
     void shouldGetItemsFromMainPageFromCache() {
         long itemId1 = 1L;
         long itemId2 = 2L;
-        CachedItem item1 = new CachedItem().id(itemId1);
-        CachedItem item2 = new CachedItem().id(itemId2);
+        CachedItem item1 = createCachedItem(itemId1);
+        CachedItem item2 = createCachedItem(itemId2);
         String itemsKey = "items:";
         List<CachedItem> cachedList = List.of(item1, item2);
 
@@ -211,8 +209,8 @@ public class CacheRepositoryTest {
     void shouldThrowIllegalArgumentExceptionWhenMappingItems() {
         long itemId1 = 1L;
         long itemId2 = 2L;
-        CachedItem item1 = new CachedItem().id(itemId1);
-        CachedItem item2 = new CachedItem().id(itemId2);
+        CachedItem item1 = createCachedItem(itemId1);
+        CachedItem item2 = createCachedItem(itemId2);
         String itemsKey = "items:";
         List<CachedItem> cachedList = List.of(item1, item2);
 
@@ -221,9 +219,8 @@ public class CacheRepositoryTest {
                 .thenThrow(new IllegalArgumentException());
 
         StepVerifier.create(cacheRepository.getMainItemsByKey(itemsKey))
-                .expectErrorMatches(throwable -> throwable instanceof DeserializationException &&
-                        throwable.getMessage().equals("Ошибка десериализации объекта: Список CachedItem"))
-                .verify();
+                .expectNextCount(0)
+                .verifyComplete();
 
         verify(valueOperations).get(itemsKey);
         verify(objectMapper).convertValue(any(), eq(CachedItem[].class));

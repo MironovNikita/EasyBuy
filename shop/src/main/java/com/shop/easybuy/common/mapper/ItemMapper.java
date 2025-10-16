@@ -1,6 +1,6 @@
 package com.shop.easybuy.common.mapper;
 
-import com.shop.easybuy.client.model.cache.CachedItem;
+import com.shop.easybuy.entity.cache.CachedItem;
 import com.shop.easybuy.entity.item.ItemRsDto;
 import com.shop.easybuy.repository.cart.CartRepository;
 import lombok.RequiredArgsConstructor;
@@ -15,26 +15,26 @@ public class ItemMapper {
 
     public Mono<ItemRsDto> toItemRsDtoMono(CachedItem cachedItem) {
 
-        return cartRepository.findItemQuantityInCartByItemId(cachedItem.getId())
+        return cartRepository.findItemQuantityInCartByItemId(cachedItem.id())
                 .onErrorResume(e -> Mono.just(0))
                 .defaultIfEmpty(0)
                 .map(quantity -> new ItemRsDto(
-                        cachedItem.getId(),
-                        cachedItem.getTitle(),
-                        cachedItem.getDescription(),
-                        cachedItem.getImage(),
+                        cachedItem.id(),
+                        cachedItem.title(),
+                        cachedItem.description(),
+                        cachedItem.image(),
                         quantity.longValue(),
-                        cachedItem.getPrice())
+                        cachedItem.price())
                 );
     }
 
     public CachedItem toCachedItemMono(ItemRsDto itemRsDto) {
-        CachedItem cachedItem = new CachedItem();
-        cachedItem.setId(itemRsDto.id());
-        cachedItem.setTitle(itemRsDto.title());
-        cachedItem.setDescription(itemRsDto.description());
-        cachedItem.setImage(itemRsDto.image());
-        cachedItem.setPrice(itemRsDto.price());
-        return cachedItem;
+        return new CachedItem(
+                itemRsDto.id(),
+                itemRsDto.title(),
+                itemRsDto.description(),
+                itemRsDto.image(),
+                itemRsDto.price()
+        );
     }
 }

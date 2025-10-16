@@ -37,22 +37,6 @@ tasks.register("openApiGeneratePayment", GenerateTask) {
     ])
 }
 
-tasks.register("openApiGenerateCache", GenerateTask) {
-    generatorName.set("java")
-    library.set("webclient")
-    inputSpec.set(file("${project(":redis-service").projectDir}/src/main/resources/openapi/cache-spec.yaml").toURI().toString())
-    outputDir.set("$projectDir/build/generated/cache")
-    apiPackage.set("com.shop.easybuy.client.api.cache")
-    modelPackage.set("com.shop.easybuy.client.model.cache")
-    invokerPackage.set("com.shop.easybuy.client.invoker.cache")
-    configOptions.set([
-            useReactive   : "true",
-            dateLibrary   : "java8",
-            useJakartaEe  : "true",
-            useSpringBoot3: "true"
-    ])
-}
-
 sourceSets {
     main {
         java {
@@ -65,7 +49,6 @@ sourceSets {
 afterEvaluate {
     tasks.named('compileJava') {
         dependsOn tasks.named('openApiGeneratePayment')
-        dependsOn tasks.named('openApiGenerateCache')
     }
 }
 

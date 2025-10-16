@@ -1,9 +1,8 @@
 package com.shop.easybuy.repository.cache;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.shop.easybuy.common.exception.DeserializationException;
-import com.shop.easybuy.model.cache.CacheSavedRs;
-import com.shop.easybuy.model.cache.CachedItem;
+import com.shop.easybuy.entity.cache.CacheSavedRs;
+import com.shop.easybuy.entity.cache.CachedItem;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
@@ -26,13 +25,13 @@ public class CacheRepositoryImpl implements CacheRepository {
 
     @Override
     public Mono<CacheSavedRs> cacheItem(CachedItem item) {
-        String key = ITEM_KEY_PREFIX + item.getId();
+        String key = ITEM_KEY_PREFIX + item.id();
         return redisTemplate
                 .opsForValue()
                 .set(key, item, cacheLiveTime)
                 .map(CacheSavedRs::new)
                 .onErrorResume(error -> {
-                    log.error("Ошибка при кешировании товара с ID {}: {}", item.getId(), error.getMessage());
+                    log.error("Ошибка при кешировании товара с ID {}: {}", item.id(), error.getMessage());
                     return Mono.just(new CacheSavedRs(false));
                 });
     }
@@ -50,8 +49,12 @@ public class CacheRepositoryImpl implements CacheRepository {
                         return Mono.just(item);
                     } catch (IllegalArgumentException e) {
                         log.error("Ошибка десериализации CachedItem: {}", e.getMessage());
-                        return Mono.error(new DeserializationException("CachedItem"));
+                        return Mono.empty();
                     }
+                })
+                .onErrorResume(ex -> {
+                    log.warn("Ошибка при получении товара с ID {}: {}", id, ex.getMessage());
+                    return Mono.empty();
                 })
                 .switchIfEmpty(Mono.empty());
     }
@@ -85,8 +88,12 @@ public class CacheRepositoryImpl implements CacheRepository {
                         return Flux.fromArray(items);
                     } catch (IllegalArgumentException e) {
                         log.error("Ошибка при десериализации списка CachedItem: {}", e.getMessage());
-                        return Flux.error(new DeserializationException("Список CachedItem"));
+                        return Flux.empty();
                     }
+                })
+                .onErrorResume(ex -> {
+                    log.warn("Ошибка получения товаров главной страницы из кеша: {}", ex.getMessage());
+                    return Flux.empty();
                 })
                 .switchIfEmpty(Flux.empty());
     }

@@ -1,0 +1,36 @@
+{
+  "realm": "easybuy",
+  "enabled": true,
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": false,
+  "editUsernameAllowed": false,
+  "clients": [
+    {
+      "clientId": "shop",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "nXf6QBP1lENufIHaD5VnBihpcsKB09zI",
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "authorizationServicesEnabled": false,
+      "standardFlowEnabled": false,
+      "clientAuthenticatorType": "client-secret",
+      "redirectUris": [],
+      "webOrigins": [],
+      "defaultClientScopes": [
+        "profile"
+      ],
+      "optionalClientScopes": []
+    }
+  ],
+  "users": [],
+  "roles": {
+    "realm": [],
+    "client": {}
+  },
+  "groups": []
+}

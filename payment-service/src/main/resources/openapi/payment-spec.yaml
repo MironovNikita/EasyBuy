@@ -3,6 +3,8 @@ info:
   title: Платёжный сервис
   description: Сервис, отвечающий за получение баланса и проведение платежей
   version: 1.0.0
+security:
+  - keycloak: []
 servers:
   - url: http://localhost:8081
 paths:
@@ -71,6 +73,13 @@ paths:
                 $ref: '#/components/schemas/ErrorRs'
 
 components:
+  securitySchemes:
+    keycloak:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: http://localhost:8082/realms/easybuy/protocol/openid-connect/token
+          scopes: {}
   schemas:
     PaymentRq:
       type: object

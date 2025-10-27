@@ -5,39 +5,35 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
                             http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
 
-    <changeSet id="orders_items" author="MironovNikita">
+    <changeSet id="users" author="MironovNikita">
         <preConditions onFail="WARN">
             <not>
-                <tableExists tableName="orders"/>
+                <tableExists tableName="users"/>
             </not>
-            <tableExists tableName="users"/>
         </preConditions>
 
-        <createTable tableName="orders">
+        <createTable tableName="users">
             <column name="id" type="bigint" autoIncrement="true">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
-            <column name="user_id" type="bigint">
+            <column name="email" type="varchar(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="password" type="varchar(255)">
                 <constraints nullable="false"/>
             </column>
-            <column name="total" type="bigint">
+            <column name="name" type="varchar(150)">
                 <constraints nullable="false"/>
             </column>
-            <column name="created" type="timestamp" defaultValueDate="CURRENT_TIMESTAMP">
+            <column name="surname" type="varchar(150)">
                 <constraints nullable="false"/>
+            </column>
+            <column name="phone" type="varchar(255)">
+                <constraints nullable="false" unique="true"/>
             </column>
         </createTable>
-
-        <addForeignKeyConstraint
-                baseTableName="orders"
-                baseColumnNames="user_id"
-                constraintName="fk_user"
-                referencedTableName="users"
-                referencedColumnNames="id"
-                onDelete="CASCADE"/>
-
         <rollback>
-            <dropTable tableName="orders"/>
+            <dropTable tableName="users"/>
         </rollback>
     </changeSet>
 </databaseChangeLog>

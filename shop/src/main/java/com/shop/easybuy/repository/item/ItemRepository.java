@@ -25,11 +25,11 @@ public interface ItemRepository extends R2dbcRepository<Item, Long>, ItemReposit
                     COALESCE(c.quantity, 0) AS count,
                     i.price
                 FROM items i
-                LEFT JOIN cart c ON i.id = c.item_id
-                WHERE i.id = c.item_id
+                LEFT JOIN cart c ON i.id = c.item_id AND c.user_id = :userId
+                WHERE i.id = c.item_id AND c.user_id = :userId
                 ORDER BY i.id
             """)
-    Flux<ItemRsDto> findAllInCart();
+    Flux<ItemRsDto> findAllInCartByUserId(Long userId);
 
     @Query("""
             SELECT i.id,
@@ -39,8 +39,8 @@ public interface ItemRepository extends R2dbcRepository<Item, Long>, ItemReposit
                     COALESCE(c.quantity, 0) AS count,
                     i.price
             FROM items i
-            LEFT JOIN cart c ON i.id = c.item_id
+            LEFT JOIN cart c ON i.id = c.item_id AND c.user_id = :userId
             WHERE i.id = :id
             """)
-    Mono<ItemRsDto> findItemById(@Param("id") Long id);
+    Mono<ItemRsDto> findItemById(@Param("id") Long id, @Param("userId") Long userId);
 }

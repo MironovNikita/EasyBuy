@@ -5,32 +5,202 @@
     <meta charset="UTF-8">
     <title>Заказы</title>
     <th:block th:replace="~{header :: commonHead}"></th:block>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #f9fafb;
+            color: #111827;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Верхняя панель */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #f9fafb;
+            padding: 10px 20px;
+            border-bottom: 2px solid #e5e7eb;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            flex-wrap: wrap;
+        }
+
+        .user-info {
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .nav-button {
+            display: inline-block;
+            padding: 6px 14px;
+            background-color: #6366f1;
+            color: #fff;
+            font-weight: 600;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.2s ease-in-out;
+            white-space: nowrap;
+        }
+
+        .nav-button:hover {
+            background-color: #4f46e5;
+            transform: translateY(-1px);
+        }
+
+        .nav-button.logout:hover {
+            background-color: #ef4444;
+        }
+
+        /* Стили заказов */
+        .orders-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 30px auto;
+            width: 90%;
+            max-width: 1100px;
+        }
+
+        .order-card {
+            background-color: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+            padding: 20px 30px;
+            margin-bottom: 25px;
+            width: 100%;
+            border: 1px solid #e5e7eb;
+            transition: all 0.2s ease-in-out;
+        }
+
+        .order-card:hover {
+            transform: translateY(-3px);
+            border-color: #6366f1;
+            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
+        }
+
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .order-header h2 a {
+            text-decoration: none;
+            color: #1e3a8a;
+            font-size: 1.4rem;
+        }
+
+        .order-header h2 a:hover {
+            text-decoration: underline;
+        }
+
+        .order-header h4 {
+            color: #4b5563;
+            font-weight: 500;
+            font-size: 1rem;
+        }
+
+        .order-items {
+            margin-top: 10px;
+            padding-left: 15px;
+        }
+
+        .order-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #f3f4f6;
+            padding: 10px 14px;
+            border-radius: 10px;
+            margin-bottom: 8px;
+            transition: all 0.15s ease-in-out;
+        }
+
+        .order-item:hover {
+            background-color: #e5e7eb;
+            transform: translateY(-1px);
+        }
+
+        .order-item .title {
+            font-weight: 600;
+            color: #1e3a8a;
+            font-size: 1.05rem;
+        }
+
+        .order-item .count {
+            color: #6b7280;
+            font-size: 0.95rem;
+            margin-left: 6px;
+        }
+
+        .order-item .sum {
+            font-weight: 700;
+            color: #111827;
+            font-size: 1.05rem;
+        }
+
+        .order-total {
+            text-align: right;
+            font-weight: 700;
+            font-size: 1.2rem;
+            margin-top: 15px;
+            border-top: 1px solid #e5e7eb;
+            padding-top: 10px;
+        }
+    </style>
 </head>
 
 <body>
-<a th:href="@{/cart/items}" style="float:right;">
-    <b>КОРЗИНА &cudarrr;</b>
-</a>
-<a th:href="@{/main/items}" style="float:right;">
-    <b>ГЛАВНАЯ &cudarrr;</b>
-</a>
-<table style="width:70%;margin-left:auto;margin-right:auto;">
-    <tr th:each="order : ${orders}">
-        <td>
+<div class="top-bar">
+    <div class="user-info">
+        <span th:text="'Текущий пользователь: ' + ${session.currentName ?: 'Аноним 👤'}"></span>
+    </div>
+
+    <nav class="nav-links">
+        <a th:href="@{/main/items}" class="nav-button">ГЛАВНАЯ 🧾</a>
+        <a th:if="${isAuthenticated}" th:href="@{/cart/items}" class="nav-button">КОРЗИНА 🏷️</a>
+
+        <form th:if="${isAuthenticated}" th:action="@{/logout}" method="post"
+              style="display:inline"
+              onsubmit="return confirm('Действительно хотите выйти?')">
+            <button type="submit" class="nav-button logout">ВЫЙТИ 🚪</button>
+        </form>
+    </nav>
+</div>
+
+<div class="orders-container">
+    <div th:each="order : ${orders}" class="order-card">
+        <div class="order-header">
             <h2>
-                <a th:text="${'Заказ №' + order.id}" th:href="@{/orders/{id}(id=${order.id})}"></a>
+                <a th:text="${'Заказ №' + order.id}"
+                   th:href="@{/orders/{id}(id=${order.id})}"></a>
             </h2>
-            <h4><span th:text="${'Дата оформления заказа: ' + #temporals.format(order.orderCreated, 'dd.MM.yyyy HH:mm:ss')}"/></h4>
-            <table>
-                <tr th:each="orderItem : ${order.items}">
-                    <td th:text="${orderItem.title+' (' + orderItem.count + ' шт.) ' + (orderItem.price * orderItem.count) + ' руб.'}"></td>
-                </tr>
-            </table>
-            <p>
-                <b th:text="${'Сумма: ' + order.total} + ' руб.'"></b>
-            </p>
-        </td>
-    </tr>
-</table>
+            <h4 th:text="${'Дата оформления заказа: ' + #temporals.format(order.orderCreated, 'dd.MM.yyyy HH:mm:ss')}"></h4>
+        </div>
+
+        <div class="order-items">
+            <div th:each="orderItem : ${order.items}" class="order-item">
+                <div>
+                    <span class="title" th:text="${orderItem.title}"></span>
+                    <span class="count" th:text="${'(' + orderItem.count + ' шт.)'}"></span>
+                </div>
+                <span class="sum" th:text="${(orderItem.price * orderItem.count) + ' руб.'}"></span>
+            </div>
+        </div>
+
+        <div class="order-total">
+            <b th:text="${'Сумма: ' + order.total} + ' руб.'"></b>
+        </div>
+    </div>
+</div>
 </body>
 </html>

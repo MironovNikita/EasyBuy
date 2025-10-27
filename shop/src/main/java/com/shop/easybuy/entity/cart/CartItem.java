@@ -17,13 +17,17 @@ public class CartItem {
     @Column("item_id")
     private Long itemId;
 
+    @Column("user_id")
+    private Long userId;
+
     private Integer quantity;
 
     @Column("added_at")
     private LocalDateTime addedAt = LocalDateTime.now();
 
-    public CartItem(Long itemId, Integer quantity) {
+    public CartItem(Long itemId, Integer quantity, Long userId) {
         this.itemId = itemId;
         this.quantity = quantity;
+        this.userId = userId;
     }
 }

@@ -4,6 +4,7 @@ import com.shop.easybuy.common.entity.PageResult;
 import com.shop.easybuy.common.entity.SortEnum;
 import com.shop.easybuy.common.exception.ObjectNotFoundException;
 import com.shop.easybuy.common.mapper.ItemMapper;
+import com.shop.easybuy.common.security.SecurityUserContextHandler;
 import com.shop.easybuy.entity.cache.CachedItem;
 import com.shop.easybuy.entity.item.ItemRsDto;
 import com.shop.easybuy.repository.cache.CacheRepository;
@@ -38,42 +39,46 @@ public class ItemServiceImpl implements ItemService {
 
     private final ItemMapper itemMapper;
 
+    private final SecurityUserContextHandler securityUserContextHandler;
+
     @Override
     public Mono<PageResult<ItemRsDto>> getAllByParams(String search, Pageable pageable, SortEnum sort) {
         var pageSize = pageable.getPageSize();
         var pageNumber = pageable.getPageNumber();
         var key = KeyCacheGenerator.generateKey(search, sort.name(), pageSize, pageNumber);
 
-        return cacheRepository.getMainItemsByKey(key)
-                .collectList()
-                .flatMap(cachedItems -> {
-                    if (!cachedItems.isEmpty()) {
-                        log.info("Главная страница с товарами ({} шт.) получена из кеша.", cachedItems.size());
-                        return Flux.fromIterable(cachedItems)
-                                .flatMap(itemMapper::toItemRsDtoMono)
-                                .collectList()
-                                .map(list -> buildPageResult(list, pageable, list.size()));
-                    } else {
-                        log.info("Данные по параметрам (search: \"{}\", sort: {}, pageSize: {}, pageNumber: {}) не найдены в кеше.",
-                                search, sort.name(), pageSize, pageNumber);
+        return securityUserContextHandler.getCurrentUserId()
+                .defaultIfEmpty(-1L)
+                .flatMap(userId -> cacheRepository.getMainItemsByKey(key)
+                        .collectList()
+                        .flatMap(cachedItems -> {
+                            if (!cachedItems.isEmpty()) {
+                                log.info("Главная страница с товарами ({} шт.) получена из кеша.", cachedItems.size());
+                                return Flux.fromIterable(cachedItems)
+                                        .flatMap(itemMapper::toItemRsDtoMono)
+                                        .collectList()
+                                        .map(list -> buildPageResult(list, pageable, list.size()));
+                            } else {
+                                log.info("Данные по параметрам (search: \"{}\", sort: {}, pageSize: {}, pageNumber: {}) не найдены в кеше.",
+                                        search, sort.name(), pageSize, pageNumber);
 
-                        Flux<ItemRsDto> foundItems = itemRepository.findAllByTitleOrDescription(search, pageSize, pageable.getOffset(), pageable.getSort());
-                        Mono<Long> total = itemRepository.countItemsBySearch(search);
+                                Flux<ItemRsDto> foundItems = itemRepository.findAllByTitleOrDescription(search, pageSize, pageable.getOffset(), pageable.getSort(), userId);
+                                Mono<Long> total = itemRepository.countItemsBySearch(search);
 
-                        return getPageResultAndSaveCache(foundItems, total, key, pageable);
-                    }
-                })
-                .onErrorResume(ex -> {
-                    log.warn("Ошибка при извлечении товаров с главной страницы из кеша: {}", ex.getMessage());
+                                return getPageResultAndSaveCache(foundItems, total, key, pageable);
+                            }
+                        })
+                        .onErrorResume(ex -> {
+                            log.warn("Ошибка при извлечении товаров с главной страницы из кеша: {}", ex.getMessage());
 
-                    Flux<ItemRsDto> foundItems = itemRepository.findAllByTitleOrDescription(search, pageSize, pageable.getOffset(), pageable.getSort());
-                    Mono<Long> total = itemRepository.countItemsBySearch(search);
+                            Flux<ItemRsDto> foundItems = itemRepository.findAllByTitleOrDescription(search, pageSize, pageable.getOffset(), pageable.getSort(), userId);
+                            Mono<Long> total = itemRepository.countItemsBySearch(search);
 
-                    return foundItems
-                            .collectList()
-                            .zipWith(total)
-                            .map(tuple -> buildPageResult(tuple.getT1(), pageable, tuple.getT2()));
-                });
+                            return foundItems
+                                    .collectList()
+                                    .zipWith(total)
+                                    .map(tuple -> buildPageResult(tuple.getT1(), pageable, tuple.getT2()));
+                        }));
     }
 
     private PageResult<ItemRsDto> buildPageResult(List<ItemRsDto> list, Pageable pageable, long totalCount) {
@@ -116,35 +121,37 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public Mono<ItemRsDto> findItemById(Long id) {
 
-        return cacheRepository.getItemById(id)
-                .flatMap(cachedItem -> {
-                    if (cachedItem == null) return Mono.empty();
-                    log.info("Товар с ID {} был извлечён из кеша.", id);
-                    return itemMapper.toItemRsDtoMono(cachedItem);
-                })
-                .onErrorResume(ex -> {
-                    log.warn("Ошибка при извлечении товара с ID {} из кеша: {}", id, ex.getMessage());
-                    return Mono.empty();
-                })
-                .switchIfEmpty(
-                        itemRepository.findItemById(id)
-                                .switchIfEmpty(Mono.defer(() -> {
-                                    log.error("Товар с указанным ID {} не был найден.", id);
-                                    return Mono.error(new ObjectNotFoundException("Товар", id));
-                                }))
-                                .flatMap(itemRsDto -> {
-                                    CachedItem cachedItem = itemMapper.toCachedItemMono(itemRsDto);
-                                    return cacheRepository.cacheItem(cachedItem)
-                                            .doOnNext(cacheSavedRs -> {
-                                                if (Boolean.TRUE.equals(cacheSavedRs.saved())) log.info("Товар с ID {} сохранён в кеш.", id);
-                                                else log.warn("Ошибка сохранения товара с ID {} в кеш.", id);
-                                            })
-                                            .onErrorResume(e -> {
-                                                log.warn("Ошибка при сохранении товара {} в кеш: {}", id, e.getMessage());
-                                                return Mono.empty();
-                                            })
-                                            .thenReturn(itemRsDto);
-                                })
-                );
+        return securityUserContextHandler.getCurrentUserId()
+                .defaultIfEmpty(-1L)
+                .flatMap(userId -> cacheRepository.getItemById(id)
+                        .flatMap(cachedItem -> {
+                            if (cachedItem == null) return Mono.empty();
+                            log.info("Товар с ID {} был извлечён из кеша.", id);
+                            return itemMapper.toItemRsDtoMono(cachedItem);
+                        })
+                        .onErrorResume(ex -> {
+                            log.warn("Ошибка при извлечении товара с ID {} из кеша: {}", id, ex.getMessage());
+                            return Mono.empty();
+                        })
+                        .switchIfEmpty(
+                                itemRepository.findItemById(id, userId)
+                                        .switchIfEmpty(Mono.defer(() -> {
+                                            log.error("Товар с указанным ID {} не был найден.", id);
+                                            return Mono.error(new ObjectNotFoundException("Товар", id));
+                                        }))
+                                        .flatMap(itemRsDto -> {
+                                            CachedItem cachedItem = itemMapper.toCachedItemMono(itemRsDto);
+                                            return cacheRepository.cacheItem(cachedItem)
+                                                    .doOnNext(cacheSavedRs -> {
+                                                        if (Boolean.TRUE.equals(cacheSavedRs.saved())) log.info("Товар с ID {} сохранён в кеш.", id);
+                                                        else log.warn("Ошибка сохранения товара с ID {} в кеш.", id);
+                                                    })
+                                                    .onErrorResume(e -> {
+                                                        log.warn("Ошибка при сохранении товара {} в кеш: {}", id, e.getMessage());
+                                                        return Mono.empty();
+                                                    })
+                                                    .thenReturn(itemRsDto);
+                                        })
+                        ));
     }
 }

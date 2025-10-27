@@ -5,6 +5,6 @@ import org.springframework.data.domain.Sort;
 import reactor.core.publisher.Flux;
 
 public interface ItemRepositoryCustom {
-    Flux<ItemRsDto> findAllByTitleOrDescription(String search, int limit, long offset, Sort sort);
+    Flux<ItemRsDto> findAllByTitleOrDescription(String search, int limit, long offset, Sort sort, Long userId);
 }
 

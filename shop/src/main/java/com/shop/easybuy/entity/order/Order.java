@@ -17,6 +17,8 @@ public class Order {
     @Id
     private Long id;
 
+    private Long userId;
+
     private Long total;
 
     private LocalDateTime created;

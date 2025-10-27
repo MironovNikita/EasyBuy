@@ -11,7 +11,8 @@ description = 'Internet Shop EasyBuy'
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-r2dbc'
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
-    implementation "org.springframework.boot:spring-boot-starter-validation"
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.security:spring-security-oauth2-client'
 
     implementation 'org.postgresql:r2dbc-postgresql'
     implementation 'org.liquibase:liquibase-core'
@@ -24,7 +25,7 @@ dependencies {
 tasks.register("openApiGeneratePayment", GenerateTask) {
     generatorName.set("java")
     library.set("webclient")
-    inputSpec.set(file("${project(":redis-service").projectDir}/src/main/resources/openapi/payment-spec.yaml").toURI().toString())
+    inputSpec.set(file("${project(":payment-service").projectDir}/src/main/resources/openapi/payment-spec.yaml").toURI().toString())
     outputDir.set("$projectDir/build/generated/payment")
     apiPackage.set("com.shop.easybuy.client.api.payment")
     modelPackage.set("com.shop.easybuy.client.model.payment")

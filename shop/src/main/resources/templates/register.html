@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Регистрация</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <th:block th:replace="~{header :: commonHead}"></th:block>
+</head>
+<body class="bg-gray-100 flex items-center justify-center h-screen">
+
+<div class="bg-white shadow-xl rounded-2xl p-10 w-96">
+    <a th:href="@{/main/items}" style="display: block; text-align: center; margin-bottom: 2em;">
+        <b>Посмотреть товары &cudarrr;</b>
+    </a>
+
+    <h2 class="text-2xl font-semibold text-center mb-6 text-gray-800">Регистрация</h2>
+
+    <form th:action="@{/register}" method="post" class="space-y-4">
+        <div>
+            <label class="block text-gray-700 mb-1">Имя</label>
+            <label>
+                <input type="text" name="name" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-400" required>
+            </label>
+        </div>
+        <div>
+            <label class="block text-gray-700 mb-1">Фамилия</label>
+            <label>
+                <input type="text" name="surname" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-400" required>
+            </label>
+        </div>
+        <div>
+            <label class="block text-gray-700 mb-1">Email</label>
+            <label>
+                <input type="email" name="email" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-400" required>
+            </label>
+        </div>
+        <div>
+            <label class="block text-gray-700 mb-1">Телефон</label>
+            <label>
+                <input type="text" name="phone" maxlength="11" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-400" required>
+            </label>
+        </div>
+        <div>
+            <label class="block text-gray-700 mb-1">Пароль</label>
+            <label>
+                <input type="password" name="password" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-400" required>
+            </label>
+        </div>
+
+        <button type="submit"
+                class="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-2 rounded-lg">
+            Зарегистрироваться
+        </button>
+
+        <div class="text-center mt-4">
+            <a th:href="@{/login}" class="text-indigo-600 hover:underline">Уже есть аккаунт?</a>
+        </div>
+    </form>
+</div>
+
+</body>
+</html>

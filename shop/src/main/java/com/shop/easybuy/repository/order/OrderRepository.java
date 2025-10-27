@@ -8,7 +8,6 @@ import org.springframework.data.repository.query.Param;
 import reactor.core.publisher.Flux;
 
 public interface OrderRepository extends R2dbcRepository<Order, Long> {
-
     @Query("""
                 SELECT o.id AS orderId,
                         o.total AS orderTotal,
@@ -20,9 +19,10 @@ public interface OrderRepository extends R2dbcRepository<Order, Long> {
                 FROM orders o
                 LEFT JOIN order_items oi ON o.id = oi.order_id
                 LEFT JOIN items i ON oi.item_id = i.id
+                WHERE o.user_id = :userId
                 ORDER BY o.created
             """)
-    Flux<OrderFlatDto> findAllOrders();
+    Flux<OrderFlatDto> findAllOrdersByUserId(@Param("userId") Long userId);
 
     @Query("""
             SELECT o.id AS orderId,
@@ -38,7 +38,7 @@ public interface OrderRepository extends R2dbcRepository<Order, Long> {
             FROM orders o
             LEFT JOIN order_items oi ON o.id = oi.order_id
             LEFT JOIN items i ON oi.item_id = i.id
-            WHERE o.id = :orderId
+            WHERE o.id = :orderId AND o.user_id = :userId
             """)
-    Flux<OrderFlatDto> findByOrderId(@Param("orderId") Long orderId);
+    Flux<OrderFlatDto> findByOrderIdAndUserId(@Param("orderId") Long orderId, @Param("userId") Long userId);
 }

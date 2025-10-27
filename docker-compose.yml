@@ -21,7 +21,7 @@ services:
     restart: on-failure
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      REDIS_SERVICE_URL: http://redis-service:8081
+      PAYMENT_SERVICE_URL: http://payment-service:8081
       DB_JDBC_URL: jdbc:postgresql://easy-buy-db:5432/${POSTGRES_DB}
       DB_R2DBC_URL: r2dbc:postgresql://easy-buy-db:5432/${POSTGRES_DB}
 
@@ -32,10 +32,10 @@ services:
       - "6379:6379"
     restart: unless-stopped
 
-  redis-service:
+  payment-service:
     build:
       context: .
-      dockerfile: redis-service/Dockerfile
+      dockerfile: payment-service/Dockerfile
     ports:
       - "8081:8081"
     depends_on:

@@ -7,5 +7,5 @@ RUN gradle clean build -x test
 #Runtime
 FROM openjdk:21
 WORKDIR /app
-COPY --from=buildstage /app/redis-service/build/libs/*.jar app.jar
+COPY --from=buildstage /app/payment-service/build/libs/*.jar app.jar
 ENTRYPOINT ["java", "-jar", "app.jar"]

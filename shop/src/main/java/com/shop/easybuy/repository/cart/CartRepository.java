@@ -23,7 +23,7 @@ public interface CartRepository extends R2dbcRepository<CartItem, Long>, CartRep
     @Query("""
             SELECT c.quantity
             FROM cart c
-            WHERE c.item_id = :id
+            WHERE c.item_id = :id and c.user_id = :userId
             """)
-    Mono<Integer> findItemQuantityInCartByItemId(Long itemId);
+    Mono<Integer> findItemQuantityInCartByItemIdAndUserId(Long itemId, Long userId);
 }

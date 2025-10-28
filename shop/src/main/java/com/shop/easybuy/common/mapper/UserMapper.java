@@ -17,7 +17,7 @@ public class UserMapper {
 
     public User toUser(UserCreateDto userCreateDto) {
         return new User()
-                .setEmail(secureBase64Converter.encrypt(userCreateDto.getEmail()))
+                .setEmail(secureBase64Converter.encrypt(userCreateDto.getEmail().toLowerCase()))
                 .setPassword(passwordEncoder.encode(userCreateDto.getPassword()))
                 .setName(userCreateDto.getName())
                 .setSurname(userCreateDto.getSurname())

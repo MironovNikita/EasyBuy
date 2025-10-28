@@ -12,34 +12,35 @@ public class PaymentRepositoryImpl implements PaymentRepository {
 
     private final ReactiveStringRedisTemplate redisTemplate;
 
-    private static final String BALANCE_KEY = "balance";
+    private static final String BALANCE_KEY = "balance:";
 
     @Override
-    public Mono<Long> getBalance() {
+    public Mono<Long> getBalance(Long userId) {
         return redisTemplate
                 .opsForValue()
-                .get(BALANCE_KEY)
+                .get(BALANCE_KEY + userId)
                 .map(Long::parseLong);
     }
 
     @Override
-    public Mono<Long> decrementBalance(long amount) {
+    public Mono<Long> decrementBalance(Long userId, Long amount) {
         return redisTemplate
                 .opsForValue()
-                .get(BALANCE_KEY)
+                .get(BALANCE_KEY + userId)
                 .switchIfEmpty(Mono.error(new DataNotFoundException("balance")))
                 .map(Long::parseLong)
                 .flatMap(current -> {
                     long newBalance = current - amount;
                     if (newBalance < 0) return Mono.error(new IllegalArgumentException("Недостаточно средств для оформления заказа"));
 
-                    return setBalance(newBalance).thenReturn(newBalance);
+                    return setBalance(userId, newBalance).thenReturn(newBalance);
                 });
     }
 
-    private Mono<Boolean> setBalance(long balance) {
+    @Override
+    public Mono<Boolean> setBalance(Long userId, Long balance) {
         return redisTemplate
                 .opsForValue()
-                .set(BALANCE_KEY, String.valueOf(balance));
+                .set(BALANCE_KEY + userId, balance.toString());
     }
 }

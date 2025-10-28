@@ -40,6 +40,7 @@ public class CartController {
                             model.addAttribute("total", result.getTotalCount());
                             model.addAttribute("canPay", result.getCanPay());
                             model.addAttribute("paymentServiceAvailable", result.getPaymentServiceAvailable());
+                            model.addAttribute("currentBalance", result.getCurrentBalance());
                             return "cart";
                         }))
                 .switchIfEmpty(Mono.defer(() -> Mono.error(ACCESS_DENIED)));

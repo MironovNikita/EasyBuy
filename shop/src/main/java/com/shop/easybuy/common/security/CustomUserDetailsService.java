@@ -20,11 +20,13 @@ public class CustomUserDetailsService implements ReactiveUserDetailsService {
 
     @Override
     public Mono<UserDetails> findByUsername(String email) {
-        return userRepository.findUserByEmail(secureBase64Converter.encrypt(email))
+        String loweredEmail = email.toLowerCase();
+
+        return userRepository.findUserByEmail(secureBase64Converter.encrypt(loweredEmail))
                 .switchIfEmpty(Mono.error(new UsernameNotFoundException("Пользователь %s не найден".formatted(email))))
                 .map(user -> CustomUserDetails.builder()
                         .userId(user.getId())
-                        .email(email)
+                        .email(loweredEmail)
                         .password(user.getPassword())
                         .authorities(List.of())
                         .build());

@@ -31,10 +31,10 @@ tasks.register("openApiGeneratePayment", GenerateTask) {
     modelPackage.set("com.shop.easybuy.client.model.payment")
     invokerPackage.set("com.shop.easybuy.client.invoker.payment")
     configOptions.set([
-            useReactive       : "true",
-            dateLibrary       : "java8",
-            useJakartaEe      : "true",
-            useSpringBoot3    : "true"
+            useReactive   : "true",
+            dateLibrary   : "java8",
+            useJakartaEe  : "true",
+            useSpringBoot3: "true"
     ])
 }
 
@@ -42,7 +42,6 @@ sourceSets {
     main {
         java {
             srcDir("$buildDir/generated/payment/src/main/java")
-            srcDir("$buildDir/generated/cache/src/main/java")
         }
     }
 }

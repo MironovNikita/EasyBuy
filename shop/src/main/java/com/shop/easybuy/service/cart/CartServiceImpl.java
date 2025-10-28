@@ -90,16 +90,16 @@ public class CartServiceImpl implements CartService {
                             var total = countTotal(items);
                             var foundItems = Utils.splitList(items, rowSize);
 
-                            return paymentApi.getBalance()
+                            return paymentApi.getBalance(userId)
                                     .map(BalanceRs::getBalance)
                                     .map(currentBalance -> {
                                         boolean canPay = currentBalance >= total;
                                         log.info("В корзине пользователя с ID {} найдено {} товаров.", userId, items.size());
-                                        return new CartViewDto(foundItems, total, canPay, true);
+                                        return new CartViewDto(foundItems, total, canPay, true, currentBalance);
                                     })
                                     .onErrorResume(e -> {
                                         log.warn("Платёжный сервис недоступен: {}", e.getMessage());
-                                        return Mono.just(new CartViewDto(foundItems, total, false, false));
+                                        return Mono.just(new CartViewDto(foundItems, total, false, false, -1L));
                                     });
                         }));
     }

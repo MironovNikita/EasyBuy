@@ -24,14 +24,14 @@ tasks.register("openApiGeneratePayment", GenerateTask) {
     apiPackage.set("com.shop.easybuy.api.payment")
     modelPackage.set("com.shop.easybuy.model.payment")
     configOptions.set([
-            interfaceOnly     : "true",
-            useBeanValidation : "true",
-            library           : "spring-boot",
-            reactive          : "true",
-            useTags           : "true",
-            dateLibrary       : "java8",
-            useJakartaEe      : "true",
-            useSpringBoot3    : "true"
+            interfaceOnly    : "true",
+            useBeanValidation: "true",
+            library          : "spring-boot",
+            reactive         : "true",
+            useTags          : "true",
+            dateLibrary      : "java8",
+            useJakartaEe     : "true",
+            useSpringBoot3   : "true"
     ])
 }
 
@@ -39,7 +39,6 @@ sourceSets {
     main {
         java {
             srcDir("$buildDir/generated/payment/src/main/java")
-            srcDir("$buildDir/generated/cache/src/main/java")
         }
     }
 }

@@ -24,7 +24,7 @@ public class ItemRepositoryCustomImpl implements ItemRepositoryCustom {
                 i.price
                 FROM items i
                 LEFT JOIN cart c ON i.id = c.item_id AND c.user_id = :userId
-                WHERE i.title ILIKE CONCAT('%', :search, '%') or i.description ILIKE CONCAT('%', :search, '%')
+                WHERE i.title ILIKE CONCAT('%', :search, '%') OR i.description ILIKE CONCAT('%', :search, '%')
                 """;
 
         String orderBy = "";

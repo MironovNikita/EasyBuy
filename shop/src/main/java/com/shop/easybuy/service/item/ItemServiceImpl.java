@@ -55,7 +55,7 @@ public class ItemServiceImpl implements ItemService {
                             if (!cachedItems.isEmpty()) {
                                 log.info("Главная страница с товарами ({} шт.) получена из кеша.", cachedItems.size());
                                 return Flux.fromIterable(cachedItems)
-                                        .flatMap(itemMapper::toItemRsDtoMono)
+                                        .flatMap(cachedItem -> itemMapper.toItemRsDtoMono(cachedItem, userId))
                                         .collectList()
                                         .map(list -> buildPageResult(list, pageable, list.size()));
                             } else {
@@ -127,7 +127,7 @@ public class ItemServiceImpl implements ItemService {
                         .flatMap(cachedItem -> {
                             if (cachedItem == null) return Mono.empty();
                             log.info("Товар с ID {} был извлечён из кеша.", id);
-                            return itemMapper.toItemRsDtoMono(cachedItem);
+                            return itemMapper.toItemRsDtoMono(cachedItem, userId);
                         })
                         .onErrorResume(ex -> {
                             log.warn("Ошибка при извлечении товара с ID {} из кеша: {}", id, ex.getMessage());

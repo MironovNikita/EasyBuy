@@ -241,6 +241,41 @@
             border: 1px solid #fde047;
             color: #78350f;
         }
+
+        .balance-info {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background-color: #e0f2fe;
+            border: 1px solid #3ebaf6;
+            color: #0c4a6e;
+            border-radius: 10px;
+            padding: 10px 20px;
+            margin: 15px auto;
+            width: fit-content;
+            max-width: 70%;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s ease-in-out;
+
+            /* 👇 добавим стили от кнопки */
+            font-weight: 600;
+            font-size: 1rem;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .balance-info:hover {
+            transform: translateY(-2px);
+        }
+
+        .balance-icon {
+            font-size: 1.3rem;
+        }
+
+        .balance-text strong {
+            font-weight: 800;
+            color: #0a3b60; /* чуть темнее для контраста */
+        }
     </style>
 </head>
 
@@ -291,6 +326,14 @@
     </div>
 
     <div class="buy-section">
+        <div th:if="${paymentServiceAvailable} and ${currentBalance != -1}" class="balance-info">
+            <span class="balance-icon">💰</span>
+            <span class="balance-text">
+            Ваш текущий баланс:
+            <strong th:text="${currentBalance}">Платёжный сервис недоступен</strong> ₽
+        </span>
+        </div>
+
         <form th:action="@{/buy}" method="post"
               th:if="${!emptyList} and ${canPay} and ${paymentServiceAvailable}">
             <button>Купить</button>
@@ -299,7 +342,9 @@
         <div th:if="${!paymentServiceAvailable}" class="alert alert-error">
             Платёжный сервис временно недоступен. Попробуйте позже.
         </div>
-        <div th:if="${paymentServiceAvailable} and ${!canPay}" class="alert alert-warning">
+
+        <div th:if="${paymentServiceAvailable} and ${!canPay} and ${currentBalance != -1}"
+             class="alert alert-warning">
             Недостаточно средств для оформления заказа.
         </div>
     </div>

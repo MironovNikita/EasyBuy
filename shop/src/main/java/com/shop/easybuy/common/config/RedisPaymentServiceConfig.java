@@ -30,16 +30,19 @@ public class RedisPaymentServiceConfig {
     private String defaultClientRegistrationId;
 
     @Bean
-    public ApiClient paymentApiClient() {
+    public WebClient webClient() {
         var oauth2 = new ServerOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager);
         oauth2.setDefaultClientRegistrationId(defaultClientRegistrationId);
 
-        var webClient = WebClient.builder()
+        return WebClient.builder()
                 .baseUrl(baseRedisUrl)
                 .filter(oauth2)
                 .build();
+    }
 
-        return new ApiClient(webClient)
+    @Bean
+    public ApiClient paymentApiClient() {
+        return new ApiClient(webClient())
                 .setBasePath(baseRedisUrl);
     }
 

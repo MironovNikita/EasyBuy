@@ -63,6 +63,7 @@ public class OrderServiceImpl implements OrderService {
                             var total = found.getTotalCount();
 
                             PaymentRq paymentRq = new PaymentRq();
+                            paymentRq.setUserId(userId);
                             paymentRq.setAmount(total);
 
                             return paymentApi.payWithHttpInfo(paymentRq)

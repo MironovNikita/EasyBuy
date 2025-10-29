@@ -23,28 +23,34 @@ public class PaymentControllerIntegrationTest extends BaseIntegrationTest {
     @Test
     @DisplayName("Проверка получения баланса")
     void shouldGetBalance() {
-
+        Long userId = 1L;
         webClient.get()
-                .uri("/balance")
+                .uri(uriBuilder -> uriBuilder
+                        .path("/balance")
+                        .queryParam("userId", userId)
+                        .build())
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(BalanceRs.class)
                 .consumeWith(response -> {
                     assertNotNull(response.getResponseBody());
-                    assertEquals(response.getResponseBody().getBalance(), 15000L);
+                    assertEquals(response.getResponseBody().getBalance(), 20000L);
                 });
     }
 
     @Test
     @DisplayName("Получение баланса с ошибкой, если такого ключа не будет найдено")
     void shouldNotGetBalance() {
-
+        Long userId = 1L;
         redisTemplate.opsForValue()
-                .delete("balance")
+                .delete("balance:" + userId)
                 .subscribe();
 
         webClient.get()
-                .uri("/balance")
+                .uri(uriBuilder -> uriBuilder
+                        .path("/balance")
+                        .queryParam("userId", userId)
+                        .build())
                 .exchange()
                 .expectStatus().is4xxClientError()
                 .expectBody(ErrorRs.class)
@@ -61,14 +67,14 @@ public class PaymentControllerIntegrationTest extends BaseIntegrationTest {
 
         webClient.post()
                 .uri("/pay")
-                .body(BodyInserters.fromValue(new PaymentRq().amount(5000L)))
+                .body(BodyInserters.fromValue(new PaymentRq().userId(1L).amount(5000L)))
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(BalanceRs.class)
                 .consumeWith(response -> {
                     var body = response.getResponseBody();
                     assertNotNull(body);
-                    assertEquals(response.getResponseBody().getBalance(), 10000L);
+                    assertEquals(response.getResponseBody().getBalance(), 15000L);
                 });
     }
 
@@ -78,7 +84,7 @@ public class PaymentControllerIntegrationTest extends BaseIntegrationTest {
 
         webClient.post()
                 .uri("/pay")
-                .body(BodyInserters.fromValue(new PaymentRq().amount(50000L)))
+                .body(BodyInserters.fromValue(new PaymentRq().userId(1L).amount(50000L)))
                 .exchange()
                 .expectStatus().is4xxClientError()
                 .expectBody(ErrorRs.class)
@@ -99,14 +105,14 @@ public class PaymentControllerIntegrationTest extends BaseIntegrationTest {
 
         webClient.post()
                 .uri("/pay")
-                .body(BodyInserters.fromValue(new PaymentRq().amount(50000L)))
+                .body(BodyInserters.fromValue(new PaymentRq().userId(1L).amount(50000L)))
                 .exchange()
                 .expectStatus().is4xxClientError()
                 .expectBody(ErrorRs.class)
                 .consumeWith(response -> {
                     var body = response.getResponseBody();
                     assertNotNull(body);
-                    assertEquals("404", body.getErrorCode());
+                    assertEquals("402", body.getErrorCode());
                 });
     }
 }

@@ -27,7 +27,7 @@ public class PaymentRepositoryImpl implements PaymentRepository {
         return redisTemplate
                 .opsForValue()
                 .get(BALANCE_KEY + userId)
-                .switchIfEmpty(Mono.error(new DataNotFoundException("balance")))
+                .switchIfEmpty(Mono.error(new DataNotFoundException(BALANCE_KEY + userId)))
                 .map(Long::parseLong)
                 .flatMap(current -> {
                     long newBalance = current - amount;

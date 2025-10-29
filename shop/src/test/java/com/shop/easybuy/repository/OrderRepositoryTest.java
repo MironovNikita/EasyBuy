@@ -2,6 +2,7 @@ package com.shop.easybuy.repository;
 
 import com.shop.easybuy.entity.order.Order;
 import com.shop.easybuy.entity.order.OrderItem;
+import com.shop.easybuy.entity.user.User;
 import com.shop.easybuy.repository.order.OrderItemRepository;
 import com.shop.easybuy.repository.order.OrderRepository;
 import org.junit.jupiter.api.DisplayName;
@@ -13,6 +14,8 @@ import reactor.test.StepVerifier;
 import java.util.ArrayList;
 
 import static com.shop.easybuy.DataCreator.createOrder;
+import static com.shop.easybuy.DataCreator.createUser;
+import static com.shop.easybuy.DataInserter.insertIntoUserTable;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -27,12 +30,15 @@ public class OrderRepositoryTest extends AbstractRepositoryTest {
     @Test
     @DisplayName("Поиск заказа по ID")
     void shouldFindOrderById() {
-        Order order = createOrder();
+        Long userId = 1L;
+        User user = createUser(userId);
+        insertIntoUserTable(databaseClient, user).block();
+        Order order = createOrder(userId);
 
         StepVerifier.create(orderRepository.save(order)
                         .flatMap(savedOrder -> orderItemRepository.save(new OrderItem(null, 1L, 1L, 2L))
                                 .thenReturn(savedOrder))
-                        .flatMapMany(savedOrder -> orderRepository.findByOrderId(savedOrder.getId())))
+                        .flatMapMany(savedOrder -> orderRepository.findByOrderIdAndUserId(savedOrder.getId(), userId)))
                 .assertNext(found -> {
                     assertThat(found).isNotNull();
                     assertThat(found.orderId()).isEqualTo(order.getId());
@@ -46,8 +52,11 @@ public class OrderRepositoryTest extends AbstractRepositoryTest {
     @Test
     @DisplayName("Поиск заказа по ID - заказ не найден")
     void shouldNotFindOrderById() {
+        Long userId = 1L;
+        User user = createUser(userId);
+        insertIntoUserTable(databaseClient, user).block();
 
-        StepVerifier.create(orderRepository.findByOrderId(9999L))
+        StepVerifier.create(orderRepository.findByOrderIdAndUserId(9999L, userId))
                 .expectNextCount(0L)
                 .verifyComplete();
     }
@@ -55,8 +64,11 @@ public class OrderRepositoryTest extends AbstractRepositoryTest {
     @Test
     @DisplayName("Поиск всех заказов")
     void shouldFindAllOrders() {
-        Order order1 = createOrder();
-        Order order2 = createOrder();
+        Long userId = 1L;
+        User user = createUser(userId);
+        insertIntoUserTable(databaseClient, user).block();
+        Order order1 = createOrder(userId);
+        Order order2 = createOrder(userId);
 
         Mono<Void> setup = orderRepository.save(order1)
                 .then(orderRepository.save(order2))
@@ -64,7 +76,7 @@ public class OrderRepositoryTest extends AbstractRepositoryTest {
                 .then(orderItemRepository.save(new OrderItem(null, 2L, 1L, 2L)))
                 .then();
 
-        StepVerifier.create(setup.thenMany(orderRepository.findAllOrders()))
+        StepVerifier.create(setup.thenMany(orderRepository.findAllOrdersByUserId(userId)))
                 .recordWith(ArrayList::new)
                 .expectNextCount(2L)
                 .consumeRecordedWith(orders -> {
@@ -79,8 +91,11 @@ public class OrderRepositoryTest extends AbstractRepositoryTest {
     @Test
     @DisplayName("Поиск всех заказов - заказы не найдены")
     void shouldFindNoOrders() {
+        Long userId = 1L;
+        User user = createUser(userId);
+        insertIntoUserTable(databaseClient, user).block();
 
-        StepVerifier.create(orderRepository.findAllOrders())
+        StepVerifier.create(orderRepository.findAllOrdersByUserId(userId))
                 .expectNextCount(0L)
                 .verifyComplete();
     }

@@ -1,14 +1,14 @@
-package com.shop.easybuy.common.config;
+package com.shop.easybuy.controller;
 
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 
-@Configuration
-@Profile("!test")
-public class SecurityConfig {
+@Profile("test")
+@TestConfiguration
+public class TestSecurityConfig {
 
     @Bean
     public SecurityWebFilterChain securityFilterChain(ServerHttpSecurity http) {
@@ -16,10 +16,8 @@ public class SecurityConfig {
                 .authorizeExchange(exchange ->
                         exchange
                                 .anyExchange()
-                                .authenticated())
-                .oauth2ResourceServer(oauth2 -> oauth2
-                        .jwt(jwt -> {
-                        }))
+                                .permitAll())
+                .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .build();
     }
 }

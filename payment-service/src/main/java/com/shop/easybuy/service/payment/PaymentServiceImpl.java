@@ -21,7 +21,7 @@ public class PaymentServiceImpl implements PaymentService {
     public Mono<BalanceRs> getBalance(Long userId) {
         return paymentRepository
                 .getBalance(userId)
-                .switchIfEmpty(Mono.error(new DataNotFoundException("balance")))
+                .switchIfEmpty(Mono.error(new DataNotFoundException("balance:" + userId)))
                 .doOnNext(b -> log.info("Значение баланса успешно извлечено: {}", b))
                 .map(b -> new BalanceRs().balance(b));
     }

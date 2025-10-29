@@ -2,7 +2,7 @@ package com.shop.easybuy.controller.user;
 
 import com.shop.easybuy.common.validation.Create;
 import com.shop.easybuy.entity.user.UserCreateDto;
-import com.shop.easybuy.service.user.UserServiceImpl;
+import com.shop.easybuy.service.user.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -18,7 +18,7 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class UserController {
 
-    private final UserServiceImpl userService;
+    private final UserService userService;
 
     @GetMapping("/login")
     public Mono<String> loginPage(

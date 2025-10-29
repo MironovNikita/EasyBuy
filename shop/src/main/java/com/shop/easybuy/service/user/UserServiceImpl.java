@@ -34,12 +34,13 @@ public class UserServiceImpl implements UserService {
                                 .userId(user.getId())
                                 .balance(initialValue))
                         .doOnSuccess(status -> log.info("Баланс для пользователя с email {} был установлен: {}", userCreateDto.getEmail(), status))
-                        .onErrorResume(e -> {
-                            log.error("Ошибка установки баланса: {}", e.getMessage());
-                            return Mono.error(new RegistrationFailedException(e.getMessage()));
-                        })
-                        .thenReturn(user))
+                        .thenReturn(user)
+                )
                 .doOnSuccess(user -> log.info("Пользователь c email {} был успешно зарегистрирован.", userCreateDto.getEmail()))
+                .onErrorResume(e -> {
+                    log.error("Ошибка установки баланса: {}", e.getMessage());
+                    return Mono.error(new RegistrationFailedException(e.getMessage()));
+                })
                 .then();
     }
 }

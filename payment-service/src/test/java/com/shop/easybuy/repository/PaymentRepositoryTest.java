@@ -36,35 +36,38 @@ public class PaymentRepositoryTest {
     @Test
     @DisplayName("Проверка получения баланса из кеша")
     void shouldGetBalance() {
-        when(valueOperations.get("balance")).thenReturn(Mono.just("15000"));
+        Long userId = 1L;
+        when(valueOperations.get("balance:" + userId)).thenReturn(Mono.just("15000"));
 
-        StepVerifier.create(paymentRepository.getBalance())
+        StepVerifier.create(paymentRepository.getBalance(userId))
                 .assertNext(balance -> assertEquals(balance, 15000L))
                 .verifyComplete();
 
-        verify(valueOperations).get("balance");
+        verify(valueOperations).get("balance:" + userId);
     }
 
     @Test
     @DisplayName("Проверка уменьшения баланса при достаточном количестве средств")
     void shouldDecrementBalance() {
-        when(valueOperations.get("balance")).thenReturn(Mono.just("15000"));
-        when(valueOperations.set("balance", "5000")).thenReturn(Mono.just(true));
+        Long userId = 1L;
+        when(valueOperations.get("balance:" + userId)).thenReturn(Mono.just("15000"));
+        when(valueOperations.set("balance:" + userId, "5000")).thenReturn(Mono.just(true));
 
-        StepVerifier.create(paymentRepository.decrementBalance(10000))
+        StepVerifier.create(paymentRepository.decrementBalance(userId, 10000L))
                 .assertNext(balance -> assertEquals(balance, 5000L))
                 .verifyComplete();
 
-        verify(valueOperations).get("balance");
-        verify(valueOperations).set("balance", "5000");
+        verify(valueOperations).get("balance:" + userId);
+        verify(valueOperations).set("balance:" + userId, "5000");
     }
 
     @Test
     @DisplayName("Проверка уменьшения баланса при недостатке средств")
     void shouldNotDecrementBalanceIfNotEnoughFunds() {
-        when(valueOperations.get("balance")).thenReturn(Mono.just("1000"));
+        Long userId = 1L;
+        when(valueOperations.get("balance:" + userId)).thenReturn(Mono.just("1000"));
 
-        StepVerifier.create(paymentRepository.decrementBalance(10000))
+        StepVerifier.create(paymentRepository.decrementBalance(userId, 10000L))
                 .expectErrorMatches(throwable -> throwable instanceof IllegalArgumentException &&
                         throwable.getMessage().equals("Недостаточно средств для оформления заказа"))
                 .verify();
@@ -75,9 +78,10 @@ public class PaymentRepositoryTest {
     @Test
     @DisplayName("Проверка ошибки при проблеме с Redis")
     void shouldThrowExceptionIfRedisUnavailable() {
-        when(valueOperations.get("balance")).thenReturn(Mono.error(new RuntimeException("Redis недоступен")));
+        Long userId = 1L;
+        when(valueOperations.get("balance:" + userId)).thenReturn(Mono.error(new RuntimeException("Redis недоступен")));
 
-        StepVerifier.create(paymentRepository.getBalance())
+        StepVerifier.create(paymentRepository.getBalance(userId))
                 .expectErrorMatches(throwable -> throwable instanceof RuntimeException &&
                         throwable.getMessage().equals("Redis недоступен"))
                 .verify();

@@ -1,9 +1,11 @@
 package com.shop.easybuy.repository;
 
+import com.shop.easybuy.common.security.SecureBase64Converter;
 import com.shop.easybuy.repository.cart.CartRepository;
 import com.shop.easybuy.repository.item.ItemRepository;
 import com.shop.easybuy.repository.order.OrderItemRepository;
 import com.shop.easybuy.repository.order.OrderRepository;
+import com.shop.easybuy.repository.user.UserRepository;
 import com.shop.easybuy.testDB.AbstractTestDatabaseInitialization;
 import com.shop.easybuy.testDB.LiquibaseTestConfig;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,14 +26,19 @@ import java.util.Set;
                         ItemRepository.class,
                         OrderRepository.class,
                         CartRepository.class,
-                        OrderItemRepository.class
+                        OrderItemRepository.class,
+                        SecureBase64Converter.class,
+                        UserRepository.class,
                 }
         )
 )
 @ContextConfiguration(classes = {LiquibaseTestConfig.class})
 public abstract class AbstractRepositoryTest extends AbstractTestDatabaseInitialization {
 
-    protected static final Set<String> ALLOWED_TABLES = Set.of("cart", "order_items", "orders");
+    protected static final Set<String> ALLOWED_TABLES = Set.of("cart", "order_items", "orders", "users");
+
+    @Autowired
+    protected DatabaseClient databaseClient;
 
     @BeforeEach
     void clearTables(@Autowired DatabaseClient client) {

@@ -36,10 +36,10 @@
 - в рамках регистрации каждого пользователя предусмотрено пополнение его баланса на 20000 рублей по ключу **balance:userId**
 
 ### 🧩 Основные сущности модуля Shop 📇
-- [**Item**](https://github.com/MironovNikita/EasyBuy/blob/main/src/main/java/com/shop/easybuy/entity/item/Item.java) - отвечает за содержание основной информации о товаре.
-- [**Order**](https://github.com/MironovNikita/EasyBuy/blob/main/src/main/java/com/shop/easybuy/entity/order/Order.java) - отвечает за содержание основной информации о заказе.
-- [**CartItem**](https://github.com/MironovNikita/EasyBuy/blob/main/src/main/java/com/shop/easybuy/entity/cart/CartItem.java) - отвечает за содержание основной информации о количестве товара в корзине.
-- [**User**](https://github.com/MironovNikita/EasyBuy/blob/main/src/main/java/com/shop/easybuy/entity/user/User.java) - отвечает за содержание основной информации о пользователе.
+- [**Item**](https://github.com/MironovNikita/EasyBuy/blob/main/shop/src/main/java/com/shop/easybuy/entity/item/Item.java) - отвечает за содержание основной информации о товаре.
+- [**Order**](https://github.com/MironovNikita/EasyBuy/blob/main/shop/src/main/java/com/shop/easybuy/entity/order/Order.java) - отвечает за содержание основной информации о заказе.
+- [**CartItem**](https://github.com/MironovNikita/EasyBuy/blob/main/shop/src/main/java/com/shop/easybuy/entity/cart/CartItem.java) - отвечает за содержание основной информации о количестве товара в корзине.
+- [**User**](https://github.com/MironovNikita/EasyBuy/blob/main/shop/src/main/java/com/shop/easybuy/entity/user/User.java) - отвечает за содержание основной информации о пользователе.
 
 Структура таблиц базы данных представлена на схеме:
 
@@ -50,7 +50,7 @@
 </p>
 
 ### ⚠️ Важно ⚠️
-Все таблицы в БД приложения создаются и заполняются посредством Liquibase-скриптов. Ознакомиться с ними можно [**здесь**](https://github.com/MironovNikita/EasyBuy/blob/main/src/main/resources/db/changelog/liquibase). Заполнение осуществляется только для таблицы товаров items. Соответствующие ресурсы (картинки) для них расположены [**тут**](https://github.com/MironovNikita/EasyBuy/blob/main/src/main/resources/db/item.images).
+Все таблицы в БД приложения создаются и заполняются посредством Liquibase-скриптов. Ознакомиться с ними можно [**здесь**](https://github.com/MironovNikita/EasyBuy/blob/main/shop/src/main/resources/db/changelog/liquibase). Заполнение осуществляется только для таблицы товаров items. Соответствующие ресурсы (картинки) для них расположены [**тут**](https://github.com/MironovNikita/EasyBuy/blob/main/shop/src/main/resources/db/item.images).
 
 ### 🌐 Генерация контроллеров и клиента посредством OpenAPI
 Как упоминалось выше, связь модулей осуществляется через RESTful-взаимодействие. При этом основной модуль [**shop**](https://github.com/MironovNikita/EasyBuy/tree/main/shop) взаимодействует с модулем [**payment-service**](https://github.com/MironovNikita/EasyBuy/tree/main/payment-service) посредством клиента со своей стороны и контроллера ([**PaymentController**](https://github.com/MironovNikita/EasyBuy/blob/main/payment-service/src/main/java/com/shop/easybuy/controller/payment/PaymentController.java) со стороны redis-модуля для осуществления платежей.
@@ -258,7 +258,7 @@ eb_shop_container             | 2025-10-30 - 19:05:41.945 (Z)  INFO 1 ---> [main
   <img src="https://github.com/MironovNikita/EasyBuy/blob/main/images/notEnoughMoney.png">
 
 </p>
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 И в случае, если наш payment-service будет по каким-либо причинам недоступен:
 <p align="center">
 
@@ -336,7 +336,7 @@ eb_payment_service_container  | 2025-10-30 - 19:29:51.408 (Z)  INFO 1 ---> [lett
 eb_shop_container             | 2025-10-30 - 19:29:51.413 (Z)  INFO 1 ---> [reactor-tcp-epoll-1] c.s.e.c.filter.RequestLoggingFilter : GET-запрос http://localhost:8080/easy-buy/cart/items выполнен за 17 мс.
 ```
 
-Как можно заметить, в логи также пишется и время выполнения запроса. Данную возможность предоставляет [**RequestLoggingFilter**](https://github.com/MironovNikita/EasyBuy/blob/main/src/main/java/com/shop/easybuy/common/filter/RequestLoggingFilter.java) - компонент Spring, реализующий **WebFilter**, для логирования времени выполнения HTTP-запросов в shop-модуле и [**RequestLoggingFilter**](https://github.com/MironovNikita/EasyBuy/blob/main/payment-service/src/main/java/com/shop/easybuy/filter/RequestLoggingFilter.java) в payment-service.
+Как можно заметить, в логи также пишется и время выполнения запроса. Данную возможность предоставляет [**RequestLoggingFilter**](https://github.com/MironovNikita/EasyBuy/blob/main/shop/src/main/java/com/shop/easybuy/common/filter/RequestLoggingFilter.java) - компонент Spring, реализующий **WebFilter**, для логирования времени выполнения HTTP-запросов в shop-модуле и [**RequestLoggingFilter**](https://github.com/MironovNikita/EasyBuy/blob/main/payment-service/src/main/java/com/shop/easybuy/filter/RequestLoggingFilter.java) в payment-service.
 
 1. _Назначение_
 Логирует все HTTP-запросы к приложению и время их обработки, кроме ресурсов, которые не нужно трекать (картинки, favicon).
@@ -351,7 +351,7 @@ WebFilterChain: пропускает обработку дальше по цеп
 Но также предусмотрена валидация на уровне методов сервисов. Чтобы уже аутентифицированный пользователь не мог попасть в чужие заказы или корзину. За это отвечает класс [**SecurityUserContextHandler**](https://github.com/MironovNikita/EasyBuy/blob/main/shop/src/main/java/com/shop/easybuy/common/security/SecurityUserContextHandler.java).
 
 ## ✅ Тестирование 🐞
-Как говорилось ранее, для интеграционного тестирования предусмотрен TestContainer для БД. С его настройками можно ознакомиться [**здесь**](https://github.com/MironovNikita/EasyBuy/tree/main/src/test/java/com/shop/easybuy/testDB).
+Как говорилось ранее, для интеграционного тестирования предусмотрен TestContainer для БД. С его настройками можно ознакомиться [**здесь**](https://github.com/MironovNikita/EasyBuy/tree/main/shop/src/test/java/com/shop/easybuy/testDB).
 Также для тестирования предусмотрен TestContainer для Redis. Его настройки находятся [**тут**](https://github.com/MironovNikita/EasyBuy/tree/main/payment-service/src/test/java/com/shop/easybuy/container).
 
 ### Для модуля shop:

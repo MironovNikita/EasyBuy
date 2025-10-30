@@ -78,7 +78,7 @@ public class OrderServiceTest {
         savedOrder.setCreated(LocalDateTime.now());
         OrderItem orderItem = createOrderItem(orderItemId, orderId, itemId);
 
-        when(securityUserContextHandler.checkUserIdOrThrow(userId)).thenReturn(Mono.empty());
+        when(securityUserContextHandler.checkUserIdOrThrow(userId)).thenReturn(Mono.just(true));
         when(cartService.getAllItemsByUserId(userId)).thenReturn(Mono.just(cartViewDto));
         when(paymentApi.payWithHttpInfo(any())).thenReturn(Mono.just(ResponseEntity.ok(new BalanceRs().balance(currentBalance))));
         when(orderRepository.save(any(Order.class))).thenAnswer(inv -> {
@@ -123,7 +123,7 @@ public class OrderServiceTest {
         Long currentBalance = 20000L;
         CartViewDto cartViewDto = new CartViewDto(Collections.emptyList(), total, true, true, currentBalance);
 
-        when(securityUserContextHandler.checkUserIdOrThrow(userId)).thenReturn(Mono.empty());
+        when(securityUserContextHandler.checkUserIdOrThrow(userId)).thenReturn(Mono.just(true));
         when(cartService.getAllItemsByUserId(userId)).thenReturn(Mono.just(cartViewDto));
 
         StepVerifier.create(orderService.buyItemsInCartByUserId(userId))
@@ -144,7 +144,7 @@ public class OrderServiceTest {
         Long userId = 1L;
         OrderFlatDto orderFlatDto = createOrderFlatDto(orderId, orderItemId, itemId);
 
-        when(securityUserContextHandler.checkUserIdOrThrow(userId)).thenReturn(Mono.empty());
+        when(securityUserContextHandler.checkUserIdOrThrow(userId)).thenReturn(Mono.just(true));
         when(orderRepository.findByOrderIdAndUserId(orderId, userId)).thenReturn(Flux.just(orderFlatDto));
 
         StepVerifier.create(orderService.findByIdAndUserId(orderId, userId))
@@ -167,7 +167,7 @@ public class OrderServiceTest {
         Long orderId = 1L;
         Long userId = 1L;
 
-        when(securityUserContextHandler.checkUserIdOrThrow(userId)).thenReturn(Mono.empty());
+        when(securityUserContextHandler.checkUserIdOrThrow(userId)).thenReturn(Mono.just(true));
         when(orderRepository.findByOrderIdAndUserId(orderId, userId)).thenReturn(Flux.error(new ObjectNotFoundException("Заказ", orderId)));
 
         StepVerifier.create(orderService.findByIdAndUserId(orderId, userId))
@@ -193,7 +193,7 @@ public class OrderServiceTest {
         OrderFlatDto orderFlatDto1 = createOrderFlatDto(orderId1, orderItemId1, itemId);
         OrderFlatDto orderFlatDto2 = createOrderFlatDto(orderId2, orderItemId2, itemId);
 
-        when(securityUserContextHandler.checkUserIdOrThrow(userId)).thenReturn(Mono.empty());
+        when(securityUserContextHandler.checkUserIdOrThrow(userId)).thenReturn(Mono.just(true));
         when(orderRepository.findAllOrdersByUserId(userId)).thenReturn(Flux.just(orderFlatDto1, orderFlatDto2));
 
         StepVerifier.create(orderService.findAllByUserId(userId))
@@ -218,7 +218,8 @@ public class OrderServiceTest {
     @DisplayName("Возврат пустого списка, если заказов нет")
     void shouldReturnEmptyFluxIfNoOrders() {
         Long userId = 1L;
-        when(securityUserContextHandler.checkUserIdOrThrow(userId)).thenReturn(Mono.empty());
+
+        when(securityUserContextHandler.checkUserIdOrThrow(userId)).thenReturn(Mono.just(true));
         when(orderRepository.findAllOrdersByUserId(userId)).thenReturn(Flux.empty());
 
         StepVerifier.create(orderService.findAllByUserId(userId))
@@ -228,5 +229,4 @@ public class OrderServiceTest {
         verify(securityUserContextHandler).checkUserIdOrThrow(userId);
         verify(orderRepository).findAllOrdersByUserId(userId);
     }
-
 }

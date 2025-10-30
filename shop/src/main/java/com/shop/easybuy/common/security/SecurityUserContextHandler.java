@@ -19,7 +19,7 @@ public class SecurityUserContextHandler {
                 .map(authentication -> ((CustomUserDetails) authentication.getPrincipal()).getUserId());
     }
 
-    public Mono<Void> checkUserIdOrThrow(Long userId) {
+    public Mono<Boolean> checkUserIdOrThrow(Long userId) {
         return ReactiveSecurityContextHolder.getContext()
                 .flatMap(context -> {
                     Authentication authentication = context.getAuthentication();
@@ -30,8 +30,7 @@ public class SecurityUserContextHandler {
                     if (principal == null || !principal.getUserId().equals(userId))
                         return Mono.error(new AccessDeniedException("Доступ запрещён. Войдите под другим аккаунтом для доступа к ресурсу"));
 
-                    return Mono.empty();
+                    return Mono.just(true);
                 });
-
     }
 }

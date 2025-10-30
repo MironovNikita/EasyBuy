@@ -36,8 +36,8 @@ public class MockSecurityConfig {
             }
 
             @Override
-            public Mono<Void> checkUserIdOrThrow(Long userId) {
-                return Mono.empty();
+            public Mono<Boolean> checkUserIdOrThrow(Long userId) {
+                return Mono.just(true);
             }
         };
     }

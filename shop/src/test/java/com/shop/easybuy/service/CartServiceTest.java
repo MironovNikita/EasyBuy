@@ -59,7 +59,7 @@ public class CartServiceTest {
         Long userId = 1L;
         CartItem cartItem = new CartItem(itemId, 10, userId);
 
-        when(securityUserContextHandler.checkUserIdOrThrow(userId)).thenReturn(Mono.empty());
+        when(securityUserContextHandler.checkUserIdOrThrow(userId)).thenReturn(Mono.just(true));
         when(cartRepository.findCartItemByItemIdAndUserId(itemId, userId)).thenReturn(Mono.just(cartItem));
         when(cartRepository.addItemToCart(cartItem)).thenReturn(Mono.just(itemId));
 
@@ -78,7 +78,7 @@ public class CartServiceTest {
         Long userId = 1L;
         CartItem cartItem = new CartItem(itemId, 10, userId);
 
-        when(securityUserContextHandler.checkUserIdOrThrow(userId)).thenReturn(Mono.empty());
+        when(securityUserContextHandler.checkUserIdOrThrow(userId)).thenReturn(Mono.just(true));
         when(cartRepository.findCartItemByItemIdAndUserId(itemId, userId)).thenReturn(Mono.just(cartItem));
         when(cartRepository.addItemToCart(cartItem)).thenReturn(Mono.just(itemId));
 
@@ -97,7 +97,7 @@ public class CartServiceTest {
         Long userId = 1L;
         CartItem cartItem = new CartItem(itemId, 10, userId);
 
-        when(securityUserContextHandler.checkUserIdOrThrow(userId)).thenReturn(Mono.empty());
+        when(securityUserContextHandler.checkUserIdOrThrow(userId)).thenReturn(Mono.just(true));
         when(cartRepository.deleteCartItemByItemIdAndUserId(itemId, userId)).thenReturn(Mono.empty());
 
         StepVerifier.create(cartService.changeQuantityByUserId(itemId, ActionEnum.DELETE, userId))
@@ -119,7 +119,7 @@ public class CartServiceTest {
 
         List<ItemRsDto> items = List.of(itemRsDto1, itemRsDto2);
 
-        when(securityUserContextHandler.checkUserIdOrThrow(userId)).thenReturn(Mono.empty());
+        when(securityUserContextHandler.checkUserIdOrThrow(userId)).thenReturn(Mono.just(true));
         when(itemRepository.findAllInCartByUserId(userId)).thenReturn(Flux.fromIterable(items));
         when(paymentApi.getBalance(userId)).thenReturn(Mono.just(new BalanceRs().balance(15000L)));
 
@@ -139,7 +139,8 @@ public class CartServiceTest {
     @DisplayName("Очистка всей корзины")
     void shouldClearCart() {
         Long userId = 1L;
-        when(securityUserContextHandler.checkUserIdOrThrow(userId)).thenReturn(Mono.empty());
+
+        when(securityUserContextHandler.checkUserIdOrThrow(userId)).thenReturn(Mono.just(true));
         when(cartRepository.clearUserCartById(userId)).thenReturn(Mono.empty());
 
         StepVerifier.create(cartService.clearUserCartById(userId))

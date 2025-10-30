@@ -40,38 +40,39 @@ public class CartServiceImpl implements CartService {
     @Transactional
     public Mono<Void> changeQuantityByUserId(Long itemId, ActionEnum action, Long userId) {
         return securityUserContextHandler.checkUserIdOrThrow(userId)
-                .then(switch (action) {
-                    case PLUS -> cartRepository.findCartItemByItemIdAndUserId(itemId, userId)
-                            .defaultIfEmpty(new CartItem(itemId, 0, userId))
-                            .flatMap(found -> {
-                                found.setQuantity(found.getQuantity() + 1);
-                                logCart(itemId, found.getQuantity(), userId);
-                                return cartRepository.addItemToCart(found);
-                            })
-                            .then();
+                .flatMap(validId ->
+                        switch (action) {
+                            case PLUS -> cartRepository.findCartItemByItemIdAndUserId(itemId, userId)
+                                    .defaultIfEmpty(new CartItem(itemId, 0, userId))
+                                    .flatMap(found -> {
+                                        found.setQuantity(found.getQuantity() + 1);
+                                        logCart(itemId, found.getQuantity(), userId);
+                                        return cartRepository.addItemToCart(found);
+                                    })
+                                    .then();
 
-                    case MINUS -> cartRepository.findCartItemByItemIdAndUserId(itemId, userId)
-                            .switchIfEmpty(Mono.defer(() -> {
-                                log.warn("Товар с указанным ID {} не был найден для пользователя с ID {}. Действие {} пропущено.", itemId, action, userId);
-                                return Mono.empty();
-                            }))
-                            .flatMap(found -> {
-                                var quantity = found.getQuantity();
-                                if (quantity > 1) {
-                                    found.setQuantity(quantity - 1);
-                                    logCart(itemId, found.getQuantity(), userId);
-                                    return cartRepository.addItemToCart(found);
-                                } else {
-                                    logCart(itemId, 0, userId);
-                                    return cartRepository.deleteCartItemByItemIdAndUserId(itemId, userId);
-                                }
-                            })
-                            .then();
+                            case MINUS -> cartRepository.findCartItemByItemIdAndUserId(itemId, userId)
+                                    .switchIfEmpty(Mono.defer(() -> {
+                                        log.warn("Товар с указанным ID {} не был найден для пользователя с ID {}. Действие {} пропущено.", itemId, action, userId);
+                                        return Mono.empty();
+                                    }))
+                                    .flatMap(found -> {
+                                        var quantity = found.getQuantity();
+                                        if (quantity > 1) {
+                                            found.setQuantity(quantity - 1);
+                                            logCart(itemId, found.getQuantity(), userId);
+                                            return cartRepository.addItemToCart(found);
+                                        } else {
+                                            logCart(itemId, 0, userId);
+                                            return cartRepository.deleteCartItemByItemIdAndUserId(itemId, userId);
+                                        }
+                                    })
+                                    .then();
 
-                    case DELETE -> cartRepository.deleteCartItemByItemIdAndUserId(itemId, userId)
-                            .doOnSuccess(aVoid -> logCart(itemId, 0, userId))
-                            .then();
-                });
+                            case DELETE -> cartRepository.deleteCartItemByItemIdAndUserId(itemId, userId)
+                                    .doOnSuccess(aVoid -> logCart(itemId, 0, userId))
+                                    .then();
+                        });
     }
 
     private void logCart(Long itemId, Integer quantity, Long userId) {
@@ -84,33 +85,35 @@ public class CartServiceImpl implements CartService {
     public Mono<CartViewDto> getAllItemsByUserId(Long userId) {
 
         return securityUserContextHandler.checkUserIdOrThrow(userId)
-                .then(itemRepository.findAllInCartByUserId(userId)
-                        .collectList()
-                        .flatMap(items -> {
-                            var total = countTotal(items);
-                            var foundItems = Utils.splitList(items, rowSize);
+                .flatMap(validId ->
+                        itemRepository.findAllInCartByUserId(userId)
+                                .collectList()
+                                .flatMap(items -> {
+                                    var total = countTotal(items);
+                                    var foundItems = Utils.splitList(items, rowSize);
 
-                            return paymentApi.getBalance(userId)
-                                    .map(BalanceRs::getBalance)
-                                    .map(currentBalance -> {
-                                        boolean canPay = currentBalance >= total;
-                                        log.info("В корзине пользователя с ID {} найдено {} товаров.", userId, items.size());
-                                        return new CartViewDto(foundItems, total, canPay, true, currentBalance);
-                                    })
-                                    .onErrorResume(e -> {
-                                        log.warn("Платёжный сервис недоступен: {}", e.getMessage());
-                                        return Mono.just(new CartViewDto(foundItems, total, false, false, -1L));
-                                    });
-                        }));
+                                    return paymentApi.getBalance(userId)
+                                            .map(BalanceRs::getBalance)
+                                            .map(currentBalance -> {
+                                                boolean canPay = currentBalance >= total;
+                                                log.info("В корзине пользователя с ID {} найдено {} товаров.", userId, items.size());
+                                                return new CartViewDto(foundItems, total, canPay, true, currentBalance);
+                                            })
+                                            .onErrorResume(e -> {
+                                                log.warn("Платёжный сервис недоступен: {}", e.getMessage());
+                                                return Mono.just(new CartViewDto(foundItems, total, false, false, -1L));
+                                            });
+                                }));
     }
 
     @Override
     @Transactional
     public Mono<Void> clearUserCartById(Long userId) {
         return securityUserContextHandler.checkUserIdOrThrow(userId)
-                .then(cartRepository.clearUserCartById(userId)
-                        .doOnSuccess(clear -> log.info("Корзина пользователя с ID {} была очищена.", userId))
-                        .then());
+                .flatMap(validId ->
+                        cartRepository.clearUserCartById(userId)
+                                .doOnSuccess(clear -> log.info("Корзина пользователя с ID {} была очищена.", userId))
+                                .then());
     }
 
     private Long countTotal(List<ItemRsDto> itemsInCart) {

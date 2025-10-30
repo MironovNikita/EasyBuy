@@ -1,10 +1,9 @@
-package com.shop.easybuy.common.config;
+package com.shop.easybuy.security;
 
 import com.shop.easybuy.common.security.SecureBase64Converter;
 import com.shop.easybuy.repository.user.UserRepository;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -12,10 +11,8 @@ import org.springframework.http.ResponseCookie;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.config.Customizer;
-import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity;
+import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.security.web.server.authentication.ServerAuthenticationFailureHandler;
 import org.springframework.security.web.server.authentication.ServerAuthenticationSuccessHandler;
@@ -24,23 +21,18 @@ import reactor.core.publisher.Mono;
 
 import java.net.URI;
 
-@Profile("!test")
-@Configuration
-@EnableReactiveMethodSecurity
-public class SecurityConfig {
+@Profile("test")
+@TestConfiguration
+@EnableWebFluxSecurity
+public class TestSecurityConfig {
 
-    @Value("${spring.webflux.base-path}")
-    private String contextPath;
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+    private final String contextPath = "/easy-buy";
 
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http,
                                                          UserRepository userRepository,
                                                          SecureBase64Converter converter) {
+
 
         ServerAuthenticationSuccessHandler successHandler = (webFilterExchange, authentication) -> {
             String email = authentication.getName();

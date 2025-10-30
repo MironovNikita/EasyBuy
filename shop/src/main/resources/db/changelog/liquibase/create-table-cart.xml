@@ -11,11 +11,15 @@
                 <tableExists tableName="cart"/>
             </not>
             <tableExists tableName="items"/>
+            <tableExists tableName="users"/>
         </preConditions>
 
         <createTable tableName="cart">
             <column name="item_id" type="bigint">
-                <constraints nullable="false" unique="true"/>
+                <constraints nullable="false"/>
+            </column>
+            <column name="user_id" type="bigint">
+                <constraints nullable="false"/>
             </column>
             <column name="quantity" type="int">
                 <constraints nullable="false"/>
@@ -32,6 +36,19 @@
                 referencedTableName="items"
                 referencedColumnNames="id"
                 onDelete="CASCADE"/>
+
+        <addForeignKeyConstraint
+                baseTableName="cart"
+                baseColumnNames="user_id"
+                constraintName="fk_user"
+                referencedTableName="users"
+                referencedColumnNames="id"
+                onDelete="CASCADE"/>
+
+        <addUniqueConstraint
+                tableName="cart"
+                columnNames="item_id, user_id"
+                constraintName="unique_cart_item_user"/>
 
         <rollback>
             <dropTable tableName="cart"/>

@@ -16,12 +16,13 @@ public class CartRepositoryCustomImpl implements CartRepositoryCustom {
     public Mono<Long> addItemToCart(CartItem cartItem) {
 
         String sql = """
-                INSERT INTO cart (item_id, quantity, added_at) VALUES (:itemId, :quantity, :addedAt)
-                ON CONFLICT (item_id) DO UPDATE SET quantity = EXCLUDED.quantity
+                INSERT INTO cart (item_id, user_id, quantity, added_at) VALUES (:itemId, :userId, :quantity, :addedAt)
+                ON CONFLICT (item_id, user_id) DO UPDATE SET quantity = EXCLUDED.quantity
                 """;
 
         return client.sql(sql)
                 .bind("itemId", cartItem.getItemId())
+                .bind("userId", cartItem.getUserId())
                 .bind("quantity", cartItem.getQuantity())
                 .bind("addedAt", cartItem.getAddedAt())
                 .fetch()

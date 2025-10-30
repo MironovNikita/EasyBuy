@@ -17,4 +17,6 @@ public class CartViewDto {
     private Boolean canPay;
 
     private Boolean paymentServiceAvailable;
+
+    private Long currentBalance;
 }

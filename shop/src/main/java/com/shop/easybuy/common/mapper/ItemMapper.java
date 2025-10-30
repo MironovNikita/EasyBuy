@@ -13,9 +13,9 @@ public class ItemMapper {
 
     private final CartRepository cartRepository;
 
-    public Mono<ItemRsDto> toItemRsDtoMono(CachedItem cachedItem) {
+    public Mono<ItemRsDto> toItemRsDtoMono(CachedItem cachedItem, Long userId) {
 
-        return cartRepository.findItemQuantityInCartByItemId(cachedItem.id())
+        return cartRepository.findItemQuantityInCartByItemIdAndUserId(cachedItem.id(), userId)
                 .onErrorResume(e -> Mono.just(0))
                 .defaultIfEmpty(0)
                 .map(quantity -> new ItemRsDto(

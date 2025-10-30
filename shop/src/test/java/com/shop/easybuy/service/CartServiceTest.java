@@ -3,6 +3,7 @@ package com.shop.easybuy.service;
 import com.shop.easybuy.client.api.payment.PaymentApi;
 import com.shop.easybuy.client.model.payment.BalanceRs;
 import com.shop.easybuy.common.entity.ActionEnum;
+import com.shop.easybuy.common.security.SecurityUserContextHandler;
 import com.shop.easybuy.entity.cart.CartItem;
 import com.shop.easybuy.entity.item.ItemRsDto;
 import com.shop.easybuy.repository.cart.CartRepository;
@@ -40,6 +41,9 @@ public class CartServiceTest {
     @Mock
     private PaymentApi paymentApi;
 
+    @Mock
+    SecurityUserContextHandler securityUserContextHandler;
+
     @InjectMocks
     private CartServiceImpl cartService;
 
@@ -52,14 +56,17 @@ public class CartServiceTest {
     @DisplayName("Изменение количества товара в корзине: PLUS")
     void shouldChangeItemQuantityPlus() {
         Long itemId = 1L;
-        CartItem cartItem = new CartItem(itemId, 10);
+        Long userId = 1L;
+        CartItem cartItem = new CartItem(itemId, 10, userId);
 
-        when(cartRepository.findCartItemByItemId(itemId)).thenReturn(Mono.just(cartItem));
+        when(securityUserContextHandler.checkUserIdOrThrow(userId)).thenReturn(Mono.just(true));
+        when(cartRepository.findCartItemByItemIdAndUserId(itemId, userId)).thenReturn(Mono.just(cartItem));
         when(cartRepository.addItemToCart(cartItem)).thenReturn(Mono.just(itemId));
 
-        StepVerifier.create(cartService.changeQuantity(itemId, ActionEnum.PLUS))
+        StepVerifier.create(cartService.changeQuantityByUserId(itemId, ActionEnum.PLUS, userId))
                 .verifyComplete();
 
+        verify(securityUserContextHandler).checkUserIdOrThrow(userId);
         verify(cartRepository).addItemToCart(argThat(saved -> saved.getQuantity() == 11));
         verify(cartRepository, never()).deleteById(itemId);
     }
@@ -68,14 +75,17 @@ public class CartServiceTest {
     @DisplayName("Изменение количества товара в корзине: MINUS")
     void shouldChangeItemQuantityMinus() {
         Long itemId = 1L;
-        CartItem cartItem = new CartItem(itemId, 10);
+        Long userId = 1L;
+        CartItem cartItem = new CartItem(itemId, 10, userId);
 
-        when(cartRepository.findCartItemByItemId(itemId)).thenReturn(Mono.just(cartItem));
+        when(securityUserContextHandler.checkUserIdOrThrow(userId)).thenReturn(Mono.just(true));
+        when(cartRepository.findCartItemByItemIdAndUserId(itemId, userId)).thenReturn(Mono.just(cartItem));
         when(cartRepository.addItemToCart(cartItem)).thenReturn(Mono.just(itemId));
 
-        StepVerifier.create(cartService.changeQuantity(itemId, ActionEnum.MINUS))
+        StepVerifier.create(cartService.changeQuantityByUserId(itemId, ActionEnum.MINUS, userId))
                 .verifyComplete();
 
+        verify(securityUserContextHandler).checkUserIdOrThrow(userId);
         verify(cartRepository).addItemToCart(argThat(saved -> saved.getQuantity() == 9));
         verify(cartRepository, never()).deleteById(itemId);
     }
@@ -84,14 +94,17 @@ public class CartServiceTest {
     @DisplayName("Изменение количества товара в корзине: DELETE")
     void shouldChangeItemQuantityDelete() {
         Long itemId = 1L;
-        CartItem cartItem = new CartItem(itemId, 10);
+        Long userId = 1L;
+        CartItem cartItem = new CartItem(itemId, 10, userId);
 
-        when(cartRepository.deleteCartItemByItemId(itemId)).thenReturn(Mono.empty());
+        when(securityUserContextHandler.checkUserIdOrThrow(userId)).thenReturn(Mono.just(true));
+        when(cartRepository.deleteCartItemByItemIdAndUserId(itemId, userId)).thenReturn(Mono.empty());
 
-        StepVerifier.create(cartService.changeQuantity(itemId, ActionEnum.DELETE))
+        StepVerifier.create(cartService.changeQuantityByUserId(itemId, ActionEnum.DELETE, userId))
                 .verifyComplete();
 
-        verify(cartRepository).deleteCartItemByItemId(itemId);
+        verify(securityUserContextHandler).checkUserIdOrThrow(userId);
+        verify(cartRepository).deleteCartItemByItemIdAndUserId(itemId, userId);
         verify(cartRepository, never()).addItemToCart(cartItem);
     }
 
@@ -100,35 +113,41 @@ public class CartServiceTest {
     void shouldReturnAllCartItems() {
         Long itemId1 = 1L;
         Long itemId2 = 2L;
+        Long userId = 1L;
         ItemRsDto itemRsDto1 = createItemRsDto(itemId1);
         ItemRsDto itemRsDto2 = createItemRsDto(itemId2);
 
         List<ItemRsDto> items = List.of(itemRsDto1, itemRsDto2);
 
-        when(itemRepository.findAllInCart()).thenReturn(Flux.fromIterable(items));
-        when(paymentApi.getBalance()).thenReturn(Mono.just(new BalanceRs().balance(15000L)));
+        when(securityUserContextHandler.checkUserIdOrThrow(userId)).thenReturn(Mono.just(true));
+        when(itemRepository.findAllInCartByUserId(userId)).thenReturn(Flux.fromIterable(items));
+        when(paymentApi.getBalance(userId)).thenReturn(Mono.just(new BalanceRs().balance(15000L)));
 
-        StepVerifier.create(cartService.getAllItems())
+        StepVerifier.create(cartService.getAllItemsByUserId(userId))
                 .assertNext(found -> {
                     assertEquals(Utils.mergeList(found.getFoundItems()).size(), items.size());
                     assertEquals(found.getTotalCount(), 20000L);
                 })
                 .verifyComplete();
 
-        verify(itemRepository).findAllInCart();
-        verify(paymentApi).getBalance();
+        verify(securityUserContextHandler).checkUserIdOrThrow(userId);
+        verify(itemRepository).findAllInCartByUserId(userId);
+        verify(paymentApi).getBalance(userId);
     }
 
     @Test
     @DisplayName("Очистка всей корзины")
     void shouldClearCart() {
+        Long userId = 1L;
 
-        when(cartRepository.clearCart()).thenReturn(Mono.empty());
+        when(securityUserContextHandler.checkUserIdOrThrow(userId)).thenReturn(Mono.just(true));
+        when(cartRepository.clearUserCartById(userId)).thenReturn(Mono.empty());
 
-        StepVerifier.create(cartService.clearCart())
+        StepVerifier.create(cartService.clearUserCartById(userId))
                 .verifyComplete();
 
-        verify(cartRepository).clearCart();
+        verify(securityUserContextHandler).checkUserIdOrThrow(userId);
+        verify(cartRepository).clearUserCartById(userId);
         verifyNoInteractions(itemRepository);
     }
 }

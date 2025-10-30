@@ -5,12 +5,14 @@ import com.shop.easybuy.entity.order.Order;
 import com.shop.easybuy.entity.order.OrderItem;
 import com.shop.easybuy.entity.order.OrderItemDto;
 import com.shop.easybuy.entity.order.OrderRsDto;
+import com.shop.easybuy.entity.user.User;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
+import static com.shop.easybuy.DataCreator.createUser;
 import static com.shop.easybuy.DataInserter.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -20,10 +22,13 @@ public class OrderControllerIntegrationTest extends BaseIntegrationTest {
     @DisplayName("Оформление покупки товаров в корзине")
     void shouldCreateOrder() {
         Long orderId = 1L;
+        Long userId = 1L;
+        User user = createUser(userId);
+        insertIntoUserTable(databaseClient, user).block();
 
         insertIntoCartTable(databaseClient, List.of(
-                new CartItem(1L, 3),
-                new CartItem(2L, 5)
+                new CartItem(1L, 3, userId),
+                new CartItem(2L, 5, userId)
         )).block();
 
         webClient.post()
@@ -32,7 +37,7 @@ public class OrderControllerIntegrationTest extends BaseIntegrationTest {
                 .expectStatus().is3xxRedirection()
                 .expectHeader().valueEquals("Location", "/orders/%d?newOrder=true".formatted(orderId));
 
-        OrderRsDto order = orderService.findById(orderId).block();
+        OrderRsDto order = orderService.findByIdAndUserId(orderId, userId).block();
         assertNotNull(order);
         assertEquals(2L, order.getItems().size());
         assertEquals(18500L, order.getTotal());
@@ -74,10 +79,13 @@ public class OrderControllerIntegrationTest extends BaseIntegrationTest {
     @Test
     @DisplayName("Показать все заказы")
     void shouldShowOrders() {
+        Long userId = 1L;
+        User user = createUser(userId);
+        insertIntoUserTable(databaseClient, user).block();
 
         insertIntoOrdersTable(databaseClient, List.of(
-                new Order().setId(1L).setTotal(5000L).setCreated(LocalDateTime.parse("2025-09-14T21:56:39.047928")),
-                new Order().setId(2L).setTotal(10000L).setCreated(LocalDateTime.parse("2025-09-14T21:56:39.047928"))
+                new Order().setId(1L).setUserId(userId).setTotal(5000L).setCreated(LocalDateTime.parse("2025-09-14T21:56:39.047928")),
+                new Order().setId(2L).setUserId(userId).setTotal(10000L).setCreated(LocalDateTime.parse("2025-09-14T21:56:39.047928"))
         )).block();
 
         insertIntoOrderItemsTable(databaseClient, List.of(
@@ -97,7 +105,7 @@ public class OrderControllerIntegrationTest extends BaseIntegrationTest {
                     assertTrue(body.contains("Заказ №2"));
                 });
 
-        List<OrderRsDto> orders = orderService.findAll().collectList().block();
+        List<OrderRsDto> orders = orderService.findAllByUserId(userId).collectList().block();
         assertNotNull(orders);
         assertEquals(2, orders.size());
         var totals = orders.stream().map(OrderRsDto::getTotal).toList();
@@ -110,9 +118,12 @@ public class OrderControllerIntegrationTest extends BaseIntegrationTest {
     @DisplayName("Получение заказа по его ID")
     void shouldFindOrderById() {
         Long orderId = 1L;
+        Long userId = 1L;
+        User user = createUser(userId);
+        insertIntoUserTable(databaseClient, user).block();
 
         insertIntoOrdersTable(databaseClient, List.of(
-                new Order().setId(orderId).setTotal(5000L).setCreated(LocalDateTime.parse("2025-09-14T21:56:39.047928"))
+                new Order().setId(orderId).setUserId(userId).setTotal(5000L).setCreated(LocalDateTime.parse("2025-09-14T21:56:39.047928"))
         )).block();
 
         insertIntoOrderItemsTable(databaseClient, List.of(
@@ -129,10 +140,10 @@ public class OrderControllerIntegrationTest extends BaseIntegrationTest {
                     assertNotNull(body);
                     assertTrue(body.contains("Майка чёрная М"));
                     assertTrue(body.contains("1 шт."));
-                    assertTrue(body.contains("5000 руб."));
+                    assertTrue(body.contains("5000 ₽"));
                 });
 
-        OrderRsDto order = orderService.findById(orderId).block();
+        OrderRsDto order = orderService.findByIdAndUserId(orderId, userId).block();
         assertNotNull(order);
         assertEquals(1L, order.getItems().size());
         assertEquals(5000L, order.getTotal());

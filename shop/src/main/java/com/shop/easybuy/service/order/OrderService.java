@@ -6,9 +6,9 @@ import reactor.core.publisher.Mono;
 
 public interface OrderService {
 
-    Mono<OrderRsDto> buyItemsInCart();
+    Mono<OrderRsDto> buyItemsInCartByUserId(Long userId);
 
-    Mono<OrderRsDto> findById(Long id);
+    Mono<OrderRsDto> findByIdAndUserId(Long id, Long userId);
 
-    Flux<OrderRsDto> findAll();
+    Flux<OrderRsDto> findAllByUserId(Long userId);
 }

@@ -6,6 +6,7 @@ import com.shop.easybuy.entity.item.ItemRsDto;
 import com.shop.easybuy.entity.order.Order;
 import com.shop.easybuy.entity.order.OrderFlatDto;
 import com.shop.easybuy.entity.order.OrderItem;
+import com.shop.easybuy.entity.user.User;
 import lombok.experimental.UtilityClass;
 
 import java.time.LocalDateTime;
@@ -13,8 +14,9 @@ import java.time.LocalDateTime;
 @UtilityClass
 public class DataCreator {
 
-    public static Order createOrder() {
+    public static Order createOrder(Long userId) {
         Order order = new Order();
+        order.setUserId(userId);
         order.setTotal(10000L);
         order.setCreated(LocalDateTime.now());
         return order;
@@ -73,5 +75,15 @@ public class DataCreator {
                 "Test image",
                 5000L
         );
+    }
+
+    public static User createUser(Long userId) {
+        return new User()
+                .setId(userId)
+                .setEmail("HQwIGxFFDgsOcUtSWFFRC0sRBw==")
+                .setPassword("$2a$10$phwo6UXGZhWHpcn0zZWTouEnTZpE50GoQTdz..yjZfp65eBvQ9MuK")
+                .setName("Test name")
+                .setSurname("Test surname")
+                .setPhone("S1xSS11MDwkFAQo=");
     }
 }

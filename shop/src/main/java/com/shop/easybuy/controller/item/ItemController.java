@@ -2,6 +2,7 @@ package com.shop.easybuy.controller.item;
 
 import com.shop.easybuy.common.entity.ActionEnum;
 import com.shop.easybuy.common.entity.SortEnum;
+import com.shop.easybuy.common.security.SecurityUserContextHandler;
 import com.shop.easybuy.service.cart.CartService;
 import com.shop.easybuy.service.item.ItemService;
 import com.shop.easybuy.utils.ValidationUtils;
@@ -9,6 +10,7 @@ import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.annotation.Validated;
@@ -26,6 +28,10 @@ public class ItemController {
     private final ItemService itemService;
 
     private final CartService cartService;
+
+    private final SecurityUserContextHandler securityUserContextHandler;
+
+    private final AccessDeniedException ACCESS_DENIED = new AccessDeniedException("Ошибка авторизации. Необходимо войти в учётную запись.");
 
     @GetMapping("/")
     public Mono<String> mainRedirect() {
@@ -60,23 +66,25 @@ public class ItemController {
                                                @Positive(message = "ID товара должно быть положительным числом.") Long id,
                                                ServerWebExchange exchange) {
 
-        return exchange.getFormData()
-                .flatMap(formData -> {
-                    ActionEnum action = ValidationUtils.validateAction(formData.getFirst("action"));
-                    String search = ValidationUtils.validateSearch(formData.getFirst("search"));
-                    String sort = formData.getFirst("sort");
-                    String pageNumber = formData.getFirst("pageNumber");
-                    String pageSize = formData.getFirst("pageSize");
+        return securityUserContextHandler.getCurrentUserId()
+                .flatMap(userId -> exchange.getFormData()
+                        .flatMap(formData -> {
+                            ActionEnum action = ValidationUtils.validateAction(formData.getFirst("action"));
+                            String search = ValidationUtils.validateSearch(formData.getFirst("search"));
+                            String sort = formData.getFirst("sort");
+                            String pageNumber = formData.getFirst("pageNumber");
+                            String pageSize = formData.getFirst("pageSize");
 
-                    return cartService.changeQuantity(id, action)
-                            .thenReturn(UriComponentsBuilder.fromPath("/main/items")
-                                    .queryParam("search", search)
-                                    .queryParam("sort", sort)
-                                    .queryParam("pageNumber", pageNumber)
-                                    .queryParam("pageSize", pageSize)
-                                    .toUriString())
-                            .map(url -> "redirect:" + url);
-                });
+                            return cartService.changeQuantityByUserId(id, action, userId)
+                                    .thenReturn(UriComponentsBuilder.fromPath("/main/items")
+                                            .queryParam("search", search)
+                                            .queryParam("sort", sort)
+                                            .queryParam("pageNumber", pageNumber)
+                                            .queryParam("pageSize", pageSize)
+                                            .toUriString())
+                                    .map(url -> "redirect:" + url);
+                        }))
+                .switchIfEmpty(Mono.defer(() -> Mono.error(ACCESS_DENIED)));
     }
 
     @GetMapping("/items/{id}")
@@ -94,12 +102,14 @@ public class ItemController {
     public Mono<String> changeQuantityItemPage(@PathVariable("id")
                                                @Positive(message = "ID товара должно быть положительным числом.") Long id,
                                                ServerWebExchange exchange) {
-        return exchange.getFormData()
-                .flatMap(formData -> {
-                    ActionEnum action = ValidationUtils.validateAction(formData.getFirst("action"));
+        return securityUserContextHandler.getCurrentUserId()
+                .flatMap(userId -> exchange.getFormData()
+                        .flatMap(formData -> {
+                            ActionEnum action = ValidationUtils.validateAction(formData.getFirst("action"));
 
-                    return cartService.changeQuantity(id, action)
-                            .then(Mono.just("redirect:/items/" + id));
-                });
+                            return cartService.changeQuantityByUserId(id, action, userId)
+                                    .then(Mono.just("redirect:/items/" + id));
+                        }))
+                .switchIfEmpty(Mono.defer(() -> Mono.error(ACCESS_DENIED)));
     }
 }

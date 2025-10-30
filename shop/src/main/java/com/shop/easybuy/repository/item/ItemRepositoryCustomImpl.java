@@ -14,7 +14,7 @@ public class ItemRepositoryCustomImpl implements ItemRepositoryCustom {
     private final DatabaseClient client;
 
     @Override
-    public Flux<ItemRsDto> findAllByTitleOrDescription(String search, int limit, long offset, Sort sort) {
+    public Flux<ItemRsDto> findAllByTitleOrDescription(String search, int limit, long offset, Sort sort, Long userId) {
         String baseQuery = """
                 SELECT i.id,
                 i.title,
@@ -23,8 +23,8 @@ public class ItemRepositoryCustomImpl implements ItemRepositoryCustom {
                 COALESCE(c.quantity, 0) AS count,
                 i.price
                 FROM items i
-                LEFT JOIN cart c ON i.id = c.item_id
-                WHERE i.title ILIKE CONCAT('%', :search, '%') or i.description ILIKE CONCAT('%', :search, '%')
+                LEFT JOIN cart c ON i.id = c.item_id AND c.user_id = :userId
+                WHERE i.title ILIKE CONCAT('%', :search, '%') OR i.description ILIKE CONCAT('%', :search, '%')
                 """;
 
         String orderBy = "";
@@ -49,6 +49,7 @@ public class ItemRepositoryCustomImpl implements ItemRepositoryCustom {
                 .bind("search", search)
                 .bind("limit", limit)
                 .bind("offset", offset)
+                .bind("userId", userId)
                 .map((row, metadata) -> new ItemRsDto(
                                 row.get("id", Long.class),
                                 row.get("title", String.class),

@@ -10,11 +10,15 @@
             <not>
                 <tableExists tableName="orders"/>
             </not>
+            <tableExists tableName="users"/>
         </preConditions>
 
         <createTable tableName="orders">
             <column name="id" type="bigint" autoIncrement="true">
                 <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="user_id" type="bigint">
+                <constraints nullable="false"/>
             </column>
             <column name="total" type="bigint">
                 <constraints nullable="false"/>
@@ -23,6 +27,15 @@
                 <constraints nullable="false"/>
             </column>
         </createTable>
+
+        <addForeignKeyConstraint
+                baseTableName="orders"
+                baseColumnNames="user_id"
+                constraintName="fk_user"
+                referencedTableName="users"
+                referencedColumnNames="id"
+                onDelete="CASCADE"/>
+
         <rollback>
             <dropTable tableName="orders"/>
         </rollback>

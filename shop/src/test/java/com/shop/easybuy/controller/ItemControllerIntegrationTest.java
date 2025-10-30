@@ -3,13 +3,16 @@ package com.shop.easybuy.controller;
 import com.shop.easybuy.common.entity.ActionEnum;
 import com.shop.easybuy.entity.cart.CartItem;
 import com.shop.easybuy.entity.item.ItemRsDto;
+import com.shop.easybuy.entity.user.User;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.reactive.function.BodyInserters;
 
 import java.util.List;
 
+import static com.shop.easybuy.DataCreator.createUser;
 import static com.shop.easybuy.DataInserter.insertIntoCartTable;
+import static com.shop.easybuy.DataInserter.insertIntoUserTable;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class ItemControllerIntegrationTest extends BaseIntegrationTest {
@@ -80,6 +83,9 @@ public class ItemControllerIntegrationTest extends BaseIntegrationTest {
     @DisplayName("Изменение количества товара в корзине на главной странице: PLUS")
     void shouldChangeQuantityOnMainPagePlus() {
         Long itemId = 1L;
+        Long userId = 1L;
+        User user = createUser(userId);
+        insertIntoUserTable(databaseClient, user).block();
 
         webClient.post()
                 .uri("/main/items/%d".formatted(itemId))
@@ -92,7 +98,7 @@ public class ItemControllerIntegrationTest extends BaseIntegrationTest {
                 .expectStatus().is3xxRedirection()
                 .expectHeader().valueEquals("Location", "/main/items?search=&sort=NONE&pageNumber=0&pageSize=10");
 
-        CartItem cartItem = cartRepository.findCartItemByItemId(itemId).block();
+        CartItem cartItem = cartRepository.findCartItemByItemIdAndUserId(itemId, userId).block();
         assertNotNull(cartItem);
         assertEquals(1, cartItem.getQuantity());
     }
@@ -101,9 +107,12 @@ public class ItemControllerIntegrationTest extends BaseIntegrationTest {
     @DisplayName("Изменение количества товара в корзине на главной странице: MINUS")
     void shouldChangeQuantityOnMainPageMinus() {
         Long itemId = 1L;
+        Long userId = 1L;
+        User user = createUser(userId);
+        insertIntoUserTable(databaseClient, user).block();
 
         insertIntoCartTable(databaseClient, List.of(
-                new CartItem(itemId, 3)
+                new CartItem(itemId, 3, userId)
         )).block();
 
         webClient.post()
@@ -117,7 +126,7 @@ public class ItemControllerIntegrationTest extends BaseIntegrationTest {
                 .expectStatus().is3xxRedirection()
                 .expectHeader().valueEquals("Location", "/main/items?search=&sort=NONE&pageNumber=0&pageSize=10");
 
-        CartItem cartItem = cartRepository.findCartItemByItemId(itemId).block();
+        CartItem cartItem = cartRepository.findCartItemByItemIdAndUserId(itemId, userId).block();
         assertNotNull(cartItem);
         assertEquals(2, cartItem.getQuantity());
     }
@@ -126,9 +135,12 @@ public class ItemControllerIntegrationTest extends BaseIntegrationTest {
     @DisplayName("Изменение количества товара в корзине на главной странице: DELETE")
     void shouldChangeQuantityOnMainPageDelete() {
         Long itemId = 1L;
+        Long userId = 1L;
+        User user = createUser(userId);
+        insertIntoUserTable(databaseClient, user).block();
 
         insertIntoCartTable(databaseClient, List.of(
-                new CartItem(itemId, 3)
+                new CartItem(itemId, 3, userId)
         )).block();
 
         webClient.post()
@@ -142,15 +154,17 @@ public class ItemControllerIntegrationTest extends BaseIntegrationTest {
                 .expectStatus().is3xxRedirection()
                 .expectHeader().valueEquals("Location", "/main/items?search=&sort=NONE&pageNumber=0&pageSize=10");
 
-        CartItem cartItem = cartRepository.findCartItemByItemId(itemId).block();
+        CartItem cartItem = cartRepository.findCartItemByItemIdAndUserId(itemId, userId).block();
         assertNull(cartItem);
     }
 
     @Test
     @DisplayName("Отображение страницы товара")
     void shouldShowItemPageIfExists() {
-
         Long itemId = 1L;
+        Long userId = 1L;
+        User user = createUser(userId);
+        insertIntoUserTable(databaseClient, user).block();
 
         webClient.get()
                 .uri("/items/%d".formatted(itemId))
@@ -163,7 +177,7 @@ public class ItemControllerIntegrationTest extends BaseIntegrationTest {
                     assertTrue(body.contains("Майка"));
                 });
 
-        ItemRsDto item = itemRepository.findItemById(itemId).block();
+        ItemRsDto item = itemRepository.findItemById(itemId, userId).block();
         assertNotNull(item);
         assertTrue(item.title().contains("Майка"));
     }
@@ -172,6 +186,9 @@ public class ItemControllerIntegrationTest extends BaseIntegrationTest {
     @DisplayName("Ошибка поиска товара по несуществующему ID")
     void shouldThrowObjectNotFoundExceptionIfNonExistentItemId() {
         Long nonExistentItemId = 9999L;
+        Long userId = 1L;
+        User user = createUser(userId);
+        insertIntoUserTable(databaseClient, user).block();
 
         webClient.get()
                 .uri("/items/%d".formatted(nonExistentItemId))
@@ -184,7 +201,7 @@ public class ItemControllerIntegrationTest extends BaseIntegrationTest {
                     assertTrue(body.contains("Товар с ID: 9999 не найден!"));
                 });
 
-        ItemRsDto item = itemRepository.findItemById(nonExistentItemId).block();
+        ItemRsDto item = itemRepository.findItemById(nonExistentItemId, userId).block();
         assertNull(item);
     }
 
@@ -192,6 +209,9 @@ public class ItemControllerIntegrationTest extends BaseIntegrationTest {
     @DisplayName("Изменение количества товара на странице товара: PLUS")
     void shouldChangeQuantityOnItemPagePlus() {
         Long itemId = 1L;
+        Long userId = 1L;
+        User user = createUser(userId);
+        insertIntoUserTable(databaseClient, user).block();
 
         webClient.post()
                 .uri("/items/%d".formatted(itemId))
@@ -200,7 +220,7 @@ public class ItemControllerIntegrationTest extends BaseIntegrationTest {
                 .expectStatus().is3xxRedirection()
                 .expectHeader().valueEquals("Location", "/items/%d".formatted(itemId));
 
-        CartItem cartItem = cartRepository.findCartItemByItemId(itemId).block();
+        CartItem cartItem = cartRepository.findCartItemByItemIdAndUserId(itemId, userId).block();
         assertNotNull(cartItem);
         assertEquals(1, cartItem.getQuantity());
     }
@@ -209,9 +229,12 @@ public class ItemControllerIntegrationTest extends BaseIntegrationTest {
     @DisplayName("Изменение количества товара на странице товара: MINUS")
     void shouldChangeQuantityOnItemPageMinus() {
         Long itemId = 1L;
+        Long userId = 1L;
+        User user = createUser(userId);
+        insertIntoUserTable(databaseClient, user).block();
 
         insertIntoCartTable(databaseClient, List.of(
-                new CartItem(itemId, 3)
+                new CartItem(itemId, 3, userId)
         )).block();
 
         webClient.post()
@@ -221,7 +244,7 @@ public class ItemControllerIntegrationTest extends BaseIntegrationTest {
                 .expectStatus().is3xxRedirection()
                 .expectHeader().valueEquals("Location", "/items/%d".formatted(itemId));
 
-        CartItem cartItem = cartRepository.findCartItemByItemId(itemId).block();
+        CartItem cartItem = cartRepository.findCartItemByItemIdAndUserId(itemId, userId).block();
         assertNotNull(cartItem);
         assertEquals(2, cartItem.getQuantity());
     }

@@ -6,9 +6,9 @@ import reactor.core.publisher.Mono;
 
 public interface CartService {
 
-    Mono<Void> changeQuantity(Long itemId, ActionEnum action);
+    Mono<Void> changeQuantityByUserId(Long itemId, ActionEnum action, Long userId);
 
-    Mono<CartViewDto> getAllItems();
+    Mono<CartViewDto> getAllItemsByUserId(Long userId);
 
-    Mono<Void> clearCart();
+    Mono<Void> clearUserCartById(Long userId);
 }

@@ -1,0 +1,197 @@
+openapi: 3.1.0
+info:
+  title: Платёжный сервис
+  description: Сервис, отвечающий за получение баланса и проведение платежей
+  version: 1.0.0
+security:
+  - keycloak: [ ]
+servers:
+  - url: http://localhost:8081
+paths:
+  /balance:
+    get:
+      summary: Получить текущий баланс
+      operationId: getBalance
+      tags:
+        - payment
+      parameters:
+        - in: query
+          name: userId
+          required: true
+          schema:
+            type: integer
+            format: int64
+            example: 1
+          description: ID пользователя
+      responses:
+        '200':
+          description: Текущий баланс успешно получен
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/BalanceRs'
+        '404':
+          description: Баланс не найден
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorRs'
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorRs'
+    post:
+      summary: Установить текущий баланс пользователя
+      operationId: setBalance
+      tags:
+        - payment
+      requestBody:
+        required: true
+        description: Устанавливаемый баланс пользователя
+        content:
+          application/json; charset=utf-8:
+            schema:
+              $ref: '#/components/schemas/BalanceSetRq'
+      responses:
+        '200':
+          description: Текущий баланс успешно установлен
+          content:
+            application/json; charset=utf-8:
+              schema:
+                type: boolean
+                example: true
+                description: Статус установки
+        '404':
+          description: Баланс не найден
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorRs'
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorRs'
+  /pay:
+    post:
+      summary: Осуществить платёж
+      operationId: pay
+      tags:
+        - payment
+      requestBody:
+        required: true
+        description: Текущая сумма покупки
+        content:
+          application/json; charset=utf-8:
+            schema:
+              $ref: '#/components/schemas/PaymentRq'
+      responses:
+        '200':
+          description: Статус операции
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/BalanceRs'
+        '400':
+          description: Недостаточно средств на счёте
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorRs'
+        '404':
+          description: Баланс не найден
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorRs'
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorRs'
+
+components:
+  securitySchemes:
+    keycloak:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: http://localhost:8082/realms/easybuy/protocol/openid-connect/token
+          scopes: { }
+  schemas:
+    PaymentRq:
+      type: object
+      required:
+        - userId
+        - amount
+      properties:
+        userId:
+          description: ID пользователя
+          type: integer
+          format: int64
+          example: 1
+        amount:
+          description: Сумма платежа
+          type: integer
+          format: int64
+          example: 5000
+    BalanceGetRq:
+      required:
+        - userId
+      type: object
+      properties:
+        userId:
+          description: ID пользователя
+          type: integer
+          format: int64
+          example: 1
+    BalanceSetRq:
+      required:
+        - userId
+        - balance
+      type: object
+      properties:
+        userId:
+          description: ID пользователя
+          type: integer
+          format: int64
+          example: 1
+        balance:
+          description: Устанавливаемый баланс
+          type: integer
+          format: int64
+          example: 10000
+    BalanceRs:
+      required:
+        - userId
+        - balance
+      type: object
+      properties:
+        userId:
+          description: ID пользователя
+          type: integer
+          format: int64
+          example: 1
+        balance:
+          description: Текущий баланс
+          type: integer
+          format: int64
+          example: 10000
+    ErrorRs:
+      required:
+        - errorInfo
+        - errorCode
+      type: object
+      properties:
+        errorInfo:
+          description: Информация об ошибке
+          type: string
+          example: Сервис недоступен
+        errorCode:
+          description: Информация о коде ошибки
+          type: string
+          example: 404

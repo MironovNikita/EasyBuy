@@ -9,6 +9,7 @@ import com.shop.easybuy.client.model.payment.PaymentRq;
 import com.shop.easybuy.common.exception.CartEmptyException;
 import com.shop.easybuy.common.exception.ObjectNotFoundException;
 import com.shop.easybuy.common.exception.PaymentFailedException;
+import com.shop.easybuy.common.security.SecurityUserContextHandler;
 import com.shop.easybuy.entity.item.ItemRsDto;
 import com.shop.easybuy.entity.order.*;
 import com.shop.easybuy.repository.order.OrderItemRepository;
@@ -45,49 +46,57 @@ public class OrderServiceImpl implements OrderService {
 
     private final ObjectMapper objectMapper;
 
+    private final SecurityUserContextHandler securityUserContextHandler;
+
     @Override
     @Transactional
-    public Mono<OrderRsDto> buyItemsInCart() {
+    public Mono<OrderRsDto> buyItemsInCartByUserId(Long userId) {
 
-        return cartService.getAllItems()
-                .flatMap(found -> {
-                    if (found.getFoundItems().isEmpty()) return Mono.error(() -> {
-                        log.error("Невозможно оформить заказ. Корзина пуста.");
-                        return new CartEmptyException();
-                    });
-                    var items = Utils.mergeList(found.getFoundItems());
-                    var total = found.getTotalCount();
+        return securityUserContextHandler.checkUserIdOrThrow(userId)
+                .flatMap(validId ->
+                        cartService.getAllItemsByUserId(userId)
+                                .flatMap(found -> {
+                                    if (found.getFoundItems().isEmpty()) return Mono.error(() -> {
+                                        log.error("Невозможно оформить заказ. Корзина пуста.");
+                                        return new CartEmptyException();
+                                    });
+                                    var items = Utils.mergeList(found.getFoundItems());
+                                    var total = found.getTotalCount();
 
-                    PaymentRq paymentRq = new PaymentRq();
-                    paymentRq.setAmount(total);
+                                    PaymentRq paymentRq = new PaymentRq();
+                                    paymentRq.setUserId(userId);
+                                    paymentRq.setAmount(total);
 
-                    return paymentApi.payWithHttpInfo(paymentRq)
-                            .flatMap(rs -> {
-                                BalanceRs balanceRs = Objects.requireNonNull(rs.getBody());
-                                log.info("Списание средств успешно произведено. Текущий баланс: {}. Формируем заказ...", balanceRs.getBalance());
-                                return createOrder(items, total);
-                            })
-                            .onErrorResume(WebClientResponseException.class, e -> {
-                                ErrorRs error;
-                                try {
-                                    error = objectMapper.readValue(e.getResponseBodyAsString(), ErrorRs.class);
-                                } catch (JsonProcessingException ex) {
-                                    error = new ErrorRs();
-                                    error.setErrorCode(String.valueOf(e.getStatusCode().value()));
-                                    error.setErrorInfo(e.getMessage());
-                                }
-                                log.error("Ошибка списания средств: {}", error.getErrorInfo());
-                                return Mono.error(new PaymentFailedException(error));
-                            });
-                })
-                .flatMap(orderDto -> cartService.clearCart().thenReturn(orderDto))
-                .doOnSuccess(orderRsDto -> log.info("Сформирован заказ с ID {} и количеством товаров {}.", orderRsDto.getId(), orderRsDto.getItems().size()));
+                                    return paymentApi.payWithHttpInfo(paymentRq)
+                                            .flatMap(rs -> {
+                                                BalanceRs balanceRs = Objects.requireNonNull(rs.getBody());
+                                                log.info("Списание средств успешно произведено. Текущий баланс пользователя с ID {}: {}. Формируем заказ...",
+                                                        userId, balanceRs.getBalance());
+                                                return createOrder(items, total, userId);
+                                            })
+                                            .onErrorResume(WebClientResponseException.class, e -> {
+                                                ErrorRs error;
+                                                try {
+                                                    error = objectMapper.readValue(e.getResponseBodyAsString(), ErrorRs.class);
+                                                } catch (JsonProcessingException ex) {
+                                                    error = new ErrorRs();
+                                                    error.setErrorCode(String.valueOf(e.getStatusCode().value()));
+                                                    error.setErrorInfo(e.getMessage());
+                                                }
+                                                log.error("Ошибка списания средств: {}", error.getErrorInfo());
+                                                return Mono.error(new PaymentFailedException(error));
+                                            });
+                                })
+                                .flatMap(orderDto -> cartService.clearUserCartById(userId).thenReturn(orderDto))
+                                .doOnSuccess(orderRsDto -> log.info("Сформирован заказ с ID {} и количеством товаров {}.",
+                                        orderRsDto.getId(), orderRsDto.getItems().size())));
     }
 
-    private Mono<OrderRsDto> createOrder(List<ItemRsDto> items, Long total) {
+    private Mono<OrderRsDto> createOrder(List<ItemRsDto> items, Long total, Long userId) {
         Order order = new Order();
         order.setTotal(total);
         order.setCreated(LocalDateTime.now());
+        order.setUserId(userId);
 
         return orderRepository.save(order)
                 .flatMap(savedOrder -> {
@@ -136,69 +145,74 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public Mono<OrderRsDto> findById(Long id) {
+    public Mono<OrderRsDto> findByIdAndUserId(Long id, Long userId) {
 
-        return orderRepository.findByOrderId(id)
-                .collectList()
-                .flatMap(rows -> {
-                    if (rows.isEmpty()) {
-                        return Mono.error(new ObjectNotFoundException("Заказ", id));
-                    }
+        return securityUserContextHandler.checkUserIdOrThrow(userId)
+                .flatMap(validId ->
+                        orderRepository.findByOrderIdAndUserId(id, userId)
+                                .collectList()
+                                .flatMap(rows -> {
+                                    if (rows.isEmpty()) {
+                                        return Mono.error(new ObjectNotFoundException("Заказ", id));
+                                    }
 
-                    var first = rows.getFirst();
-                    var items = rows.stream()
-                            .map(r -> new OrderItemDto(
-                                    r.orderItemId(),
-                                    r.itemId(),
-                                    r.itemTitle(),
-                                    r.itemDescription(),
-                                    r.itemImagePath(),
-                                    r.itemPrice(),
-                                    r.orderItemCount()
-                            )).toList();
+                                    var first = rows.getFirst();
+                                    var items = rows.stream()
+                                            .map(r -> new OrderItemDto(
+                                                    r.orderItemId(),
+                                                    r.itemId(),
+                                                    r.itemTitle(),
+                                                    r.itemDescription(),
+                                                    r.itemImagePath(),
+                                                    r.itemPrice(),
+                                                    r.orderItemCount()
+                                            )).toList();
 
-                    return Mono.just(new OrderRsDto(
-                            first.orderId(),
-                            first.orderTotal(),
-                            first.orderCreatedAt(),
-                            items
-                    )).doOnSuccess(foundOrder -> log.info("Найден заказ с ID {} и количеством товаров {}.", foundOrder.getId(), foundOrder.getItems().size()));
-                });
+                                    return Mono.just(new OrderRsDto(
+                                            first.orderId(),
+                                            first.orderTotal(),
+                                            first.orderCreatedAt(),
+                                            items
+                                    )).doOnSuccess(foundOrder -> log.info("Для пользователя с ID {} найден заказ с ID {} и количеством товаров {}.",
+                                            userId, foundOrder.getId(), foundOrder.getItems().size()));
+                                }));
     }
 
     @Override
-    public Flux<OrderRsDto> findAll() {
+    public Flux<OrderRsDto> findAllByUserId(Long userId) {
 
-        return orderRepository.findAllOrders()
-                .collectList()
-                .flatMapMany(rows -> {
-                    Map<Long, List<OrderFlatDto>> grouped = rows.stream()
-                            .collect(Collectors.groupingBy(OrderFlatDto::orderId));
+        return securityUserContextHandler.checkUserIdOrThrow(userId)
+                .flatMapMany(validId ->
+                        orderRepository.findAllOrdersByUserId(userId)
+                                .collectList()
+                                .flatMapMany(rows -> {
+                                    Map<Long, List<OrderFlatDto>> grouped = rows.stream()
+                                            .collect(Collectors.groupingBy(OrderFlatDto::orderId));
 
-                    log.info("Найдено {} заказов.", grouped.size());
+                                    log.info("Найдено {} заказов для пользователя с ID {}.", grouped.size(), userId);
 
-                    return Flux.fromIterable(grouped.values())
-                            .map(orderRows -> {
-                                var first = orderRows.getFirst();
-                                var items = orderRows.stream()
-                                        .map(r -> new OrderItemDto(
-                                                r.orderItemId(),
-                                                r.itemId(),
-                                                r.itemTitle(),
-                                                r.itemDescription(),
-                                                r.itemImagePath(),
-                                                r.itemPrice(),
-                                                r.orderItemCount()
-                                        ))
-                                        .toList();
+                                    return Flux.fromIterable(grouped.values())
+                                            .map(orderRows -> {
+                                                var first = orderRows.getFirst();
+                                                var items = orderRows.stream()
+                                                        .map(r -> new OrderItemDto(
+                                                                r.orderItemId(),
+                                                                r.itemId(),
+                                                                r.itemTitle(),
+                                                                r.itemDescription(),
+                                                                r.itemImagePath(),
+                                                                r.itemPrice(),
+                                                                r.orderItemCount()
+                                                        ))
+                                                        .toList();
 
-                                return new OrderRsDto(
-                                        first.orderId(),
-                                        first.orderTotal(),
-                                        first.orderCreatedAt(),
-                                        items
-                                );
-                            });
-                });
+                                                return new OrderRsDto(
+                                                        first.orderId(),
+                                                        first.orderTotal(),
+                                                        first.orderCreatedAt(),
+                                                        items
+                                                );
+                                            });
+                                }));
     }
 }

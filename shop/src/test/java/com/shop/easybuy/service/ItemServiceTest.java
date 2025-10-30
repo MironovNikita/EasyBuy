@@ -3,6 +3,7 @@ package com.shop.easybuy.service;
 import com.shop.easybuy.common.entity.SortEnum;
 import com.shop.easybuy.common.exception.ObjectNotFoundException;
 import com.shop.easybuy.common.mapper.ItemMapper;
+import com.shop.easybuy.common.security.SecurityUserContextHandler;
 import com.shop.easybuy.entity.cache.CacheSavedRs;
 import com.shop.easybuy.entity.cache.CachedItem;
 import com.shop.easybuy.entity.item.ItemRsDto;
@@ -43,6 +44,9 @@ public class ItemServiceTest {
     @Mock
     private ItemMapper itemMapper;
 
+    @Mock
+    SecurityUserContextHandler securityUserContextHandler;
+
     @InjectMocks
     private ItemServiceImpl itemService;
 
@@ -55,6 +59,7 @@ public class ItemServiceTest {
     @DisplayName("Получение списка товаров без параметров поиска")
     void shouldGetAllItemsWithoutParams() {
         String search = "";
+        Long userId = 1L;
         ItemRsDto itemRsDto1 = createItemRsDto(1L);
         ItemRsDto itemRsDto2 = createItemRsDto(2L);
         SortEnum sortEnum = SortEnum.NONE;
@@ -63,8 +68,9 @@ public class ItemServiceTest {
         Pageable pageable = PageRequest.of(1, 5, sortEnum.getSort());
         List<ItemRsDto> foundItems = List.of(itemRsDto1, itemRsDto2);
 
+        when(securityUserContextHandler.getCurrentUserId()).thenReturn(Mono.just(1L));
         when(cacheRepository.getMainItemsByKey(anyString())).thenReturn(Flux.empty());
-        when(itemRepository.findAllByTitleOrDescription(search, pageable.getPageSize(), pageable.getOffset(), pageable.getSort()))
+        when(itemRepository.findAllByTitleOrDescription(search, pageable.getPageSize(), pageable.getOffset(), pageable.getSort(), userId))
                 .thenReturn(Flux.fromIterable(foundItems));
         when(itemMapper.toCachedItemMono(any())).thenReturn(cachedItem);
         when(cacheRepository.cacheMainItems(any(), anyString())).thenReturn(Mono.empty());
@@ -77,8 +83,9 @@ public class ItemServiceTest {
                 })
                 .verifyComplete();
 
+        verify(securityUserContextHandler).getCurrentUserId();
         verify(cacheRepository).getMainItemsByKey(anyString());
-        verify(itemRepository).findAllByTitleOrDescription(search, pageable.getPageSize(), pageable.getOffset(), pageable.getSort());
+        verify(itemRepository).findAllByTitleOrDescription(search, pageable.getPageSize(), pageable.getOffset(), pageable.getSort(), userId);
         verify(itemMapper, times(2)).toCachedItemMono(any());
         verify(cacheRepository).cacheMainItems(any(), any());
         verify(itemRepository).countItemsBySearch(search);
@@ -88,6 +95,7 @@ public class ItemServiceTest {
     @DisplayName("Получение списка товаров по параметрам поиска")
     void shouldGetAllItemsByParams() {
         String search = "М";
+        Long userId = 1L;
         ItemRsDto itemRsDto1 = createItemRsDto(1L);
         SortEnum sortEnum = SortEnum.NONE;
         CachedItem cachedItem = mock(CachedItem.class);
@@ -95,8 +103,9 @@ public class ItemServiceTest {
         Pageable pageable = PageRequest.of(1, 5, sortEnum.getSort());
         List<ItemRsDto> foundItems = List.of(itemRsDto1);
 
+        when(securityUserContextHandler.getCurrentUserId()).thenReturn(Mono.just(1L));
         when(cacheRepository.getMainItemsByKey(anyString())).thenReturn(Flux.empty());
-        when(itemRepository.findAllByTitleOrDescription(search, pageable.getPageSize(), pageable.getOffset(), pageable.getSort()))
+        when(itemRepository.findAllByTitleOrDescription(search, pageable.getPageSize(), pageable.getOffset(), pageable.getSort(), userId))
                 .thenReturn(Flux.fromIterable(foundItems));
         when(itemMapper.toCachedItemMono(any())).thenReturn(cachedItem);
         when(cacheRepository.cacheMainItems(any(), anyString())).thenReturn(Mono.empty());
@@ -109,8 +118,9 @@ public class ItemServiceTest {
                 })
                 .verifyComplete();
 
+        verify(securityUserContextHandler).getCurrentUserId();
         verify(cacheRepository).getMainItemsByKey(anyString());
-        verify(itemRepository).findAllByTitleOrDescription(search, pageable.getPageSize(), pageable.getOffset(), pageable.getSort());
+        verify(itemRepository).findAllByTitleOrDescription(search, pageable.getPageSize(), pageable.getOffset(), pageable.getSort(), userId);
         verify(itemMapper).toCachedItemMono(any());
         verify(cacheRepository).cacheMainItems(any(), any());
         verify(itemRepository).countItemsBySearch(search);
@@ -120,10 +130,12 @@ public class ItemServiceTest {
     @DisplayName("Успешный поиск товара по его ID")
     void shouldFindItemById() {
         Long itemId = 1L;
+        Long userId = 1L;
         ItemRsDto item = createItemRsDto(itemId);
 
+        when(securityUserContextHandler.getCurrentUserId()).thenReturn(Mono.just(1L));
         when(cacheRepository.getItemById(itemId)).thenReturn(Mono.empty());
-        when(itemRepository.findItemById(itemId)).thenReturn(Mono.just(item));
+        when(itemRepository.findItemById(itemId, userId)).thenReturn(Mono.just(item));
         when(cacheRepository.cacheItem(any())).thenReturn(Mono.just(new CacheSavedRs(true)));
 
         StepVerifier.create(itemService.findItemById(itemId))
@@ -136,8 +148,9 @@ public class ItemServiceTest {
                 })
                 .verifyComplete();
 
+        verify(securityUserContextHandler).getCurrentUserId();
         verify(cacheRepository).getItemById(itemId);
-        verify(itemRepository).findItemById(itemId);
+        verify(itemRepository).findItemById(itemId, userId);
         verify(cacheRepository).cacheItem(any());
     }
 
@@ -145,9 +158,11 @@ public class ItemServiceTest {
     @DisplayName("Выброс исключения при поиске товара по его ID, если товар отсутствует")
     void shouldThrowObjectNotFoundException() {
         Long itemId = 1L;
+        Long userId = 1L;
 
+        when(securityUserContextHandler.getCurrentUserId()).thenReturn(Mono.just(1L));
         when(cacheRepository.getItemById(itemId)).thenReturn(Mono.empty());
-        when(itemRepository.findItemById(itemId)).thenReturn(Mono.error(new ObjectNotFoundException("Товар", itemId)));
+        when(itemRepository.findItemById(itemId, userId)).thenReturn(Mono.error(new ObjectNotFoundException("Товар", itemId)));
 
         StepVerifier.create(itemService.findItemById(itemId))
                 .expectErrorMatches(throwable ->
@@ -155,6 +170,7 @@ public class ItemServiceTest {
                                 throwable.getMessage().contains(itemId.toString()))
                 .verify();
 
-        verify(itemRepository).findItemById(itemId);
+        verify(securityUserContextHandler).getCurrentUserId();
+        verify(itemRepository).findItemById(itemId, userId);
     }
 }

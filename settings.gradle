@@ -13,4 +13,4 @@ pluginManagement {
 
 rootProject.name = 'EasyBuy'
 
-include 'shop', 'redis-service'
+include 'shop', 'payment-service'

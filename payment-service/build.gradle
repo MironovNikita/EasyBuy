@@ -50,5 +50,5 @@ afterEvaluate {
 }
 
 springBoot {
-    mainClass = 'com.shop.easybuy.RedisApplication'
+    mainClass = 'com.shop.easybuy.PaymentServiceApplication'
 }

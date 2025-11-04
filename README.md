@@ -108,7 +108,7 @@ Attaching to eb_database_container, eb_payment_service_container, eb_shop_contai
 ```java
 //Для Payment-Service:
 eb_payment_service_container  | 2025-10-30 - 17:57:46.747 (Z)  INFO 1 ---> [main] o.s.b.w.e.netty.NettyWebServer : Netty started on port 8081 (http)
-eb_payment_service_container  | 2025-10-30 - 17:57:46.780 (Z)  INFO 1 ---> [main] com.shop.easybuy.RedisApplication : Started RedisApplication in 4.741 seconds (process running for 5.414)
+eb_payment_service_container  | 2025-10-30 - 17:57:46.780 (Z)  INFO 1 ---> [main] com.shop.easybuy.PaymentServiceApplication : Started PaymentServiceApplication in 4.741 seconds (process running for 5.414)
 eb_payment_service_container  | 2025-10-30 - 17:57:47.490 (Z)  INFO 1 ---> [lettuce-epollEventLoop-5-1] c.s.e.c.i.RedisDataInitializer : Redis доступен.
 eb_payment_service_container  | 2025-10-30 - 17:57:47.492 (Z)  INFO 1 ---> [lettuce-epollEventLoop-5-1] c.s.e.c.i.RedisDataInitializer : Redis успешно инициализирован!
 
